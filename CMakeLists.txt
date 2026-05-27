@@ -1,39 +1,54 @@
-cmake_minimum_required(VERSION 3.10)
-project(MyProject C)
+#https://github.com/raysan5/raylib/blob/master/projects/CMake/CMakeLists.txt
 
-# 1. Set Compiler Flags (CFLAGS)
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -Werror -Wpedantic")
+cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
+project(TP-P1)
 
-# 2. Define Include Directories (-isystem)
-# Using SYSTEM to suppress warnings from external headers
-include_directories(SYSTEM ./libraries/)
+# Generate compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# 3. Define Link Directories (-L)
-link_directories(./libraries/)
+set(CMAKE_C_STANDARD 11)
 
-# 4. Define the Target and Source Files
+if(MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -Werror -Wpedantic")
+endif()
+
+# Dependencies
+set(RAYLIB_VERSION 6.0)
+find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
+if (NOT raylib_FOUND) # If there's none, fetch and build raylib
+  include(FetchContent)
+  FetchContent_Declare(
+    raylib
+    DOWNLOAD_EXTRACT_TIMESTAMP OFF
+    URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
+  )
+  FetchContent_GetProperties(raylib)
+  if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
+    set(FETCHCONTENT_QUIET NO)
+    FetchContent_MakeAvailable(raylib)
+  endif()
+endif()
+
+include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/libraries/raylib/include")
+
+# Our Project
+
 set(FOLDERPATH "./src/")
-add_executable(output ${FOLDERPATH}main.c)
+add_executable(${PROJECT_NAME} ${FOLDERPATH}main.c)
+#set(raylib_VERBOSE 1)
+target_link_libraries(${PROJECT_NAME} raylib)
 
-# 5. Link Libraries (-l)
-target_link_libraries(output 
-    raylib 
-    GL 
-    m 
-    pthread 
-    dl 
-    rt 
-    X11
-)
+# Web Configurations
+if (${PLATFORM} STREQUAL "Web")
+    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html") # Tell Emscripten to build an example.html file.
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
+endif()
 
-# 6. Custom Command for 'check' (cppcheck)
-find_program(CPPCHECK_PATH cppcheck)
-if(CPPCHECK_PATH)
-    add_custom_target(check
-        COMMAND ${CPPCHECK_PATH} --enable=all --std=c99 --suppress=missingIncludeSystem 
-                -I./libraries/ -L./libraries/ -Dbool=_Bool ${FOLDERPATH}main.c
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Running cppcheck..."
-    )
+# Checks if OSX and links appropriate frameworks (Only required on MacOS)
+if (APPLE)
+    target_link_libraries(${PROJECT_NAME} "-framework IOKit")
+    target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
+    target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
