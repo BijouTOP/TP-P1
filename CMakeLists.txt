@@ -8,11 +8,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_C_STANDARD 11)
 
-if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
-else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -Werror -Wpedantic")
-endif()
 
 # Dependencies
 set(RAYLIB_VERSION 6.0)
@@ -38,6 +33,16 @@ include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/libraries/raylib/include
 set(FOLDERPATH "./src/")
 add_executable(${PROJECT_NAME} ${FOLDERPATH}main.c)
 #set(raylib_VERBOSE 1)
+
+
+if(MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -Werror -Wpedantic")
+endif()
+
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/libraries/raylib/include")
+
 target_link_libraries(${PROJECT_NAME} raylib)
 
 # Web Configurations
