@@ -17,6 +17,13 @@
 #define AUDIO_MUTED_ICON_ID 123
 
 #define FRAME_RATE 60
+
+int closeWindow()
+{
+    CloseAudioDevice();
+    CloseWindow();
+    return 0;
+}
 int main()
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -49,10 +56,14 @@ int main()
         // Define icons rectangles
 
         // Using GetScreenHeight() / 200.0f because it is the scale factor for icons.
-        const float iconScale = GetScreenHeight() / 200.0f;
+        const int iconScale = GetScreenHeight() < GetScreenWidth() ? GetScreenHeight() / 200 : GetScreenWidth() / 200;
+        const float iconSize = 16 * iconScale;
+        const float paddingAccountingForIcon = 32 * iconScale;
 
-        Rectangle FullscreenIcon = {GetScreenWidth() - 32 * iconScale, 16 * iconScale, 16 * iconScale, 16 * iconScale};
-        Rectangle MusicIcon = {GetScreenWidth() - 32 * iconScale, GetScreenHeight() - 32 * iconScale, 16 * iconScale, 16 * iconScale};
+        DrawRectangleLinesEx((Rectangle){GetScreenWidth() - paddingAccountingForIcon, iconSize, iconSize, iconSize}, 1, BLUE);
+        DrawRectangleLinesEx((Rectangle){GetScreenWidth() - paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize}, 1, BLUE);
+        Rectangle FullscreenIcon = {GetScreenWidth() - paddingAccountingForIcon, iconSize, iconSize, iconSize};
+        Rectangle MusicIcon = {GetScreenWidth() - paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -87,27 +98,58 @@ int main()
             }
         }
 
+        // To reset call same function with default value (10)
+        float fontSize = 0.05 * GetScreenHeight();
+
         // Draw main menu
-        const float fontSize = 0.05 * GetScreenHeight(); // To reset call same function with default value (10)
+        if (GetScreenWidth() > GetScreenHeight())
+        {
+            fontSize = 0.05 * GetScreenHeight();
+        }
+        else
+        {
+            fontSize = 0.05 * GetScreenWidth();
+        }
+
         const float containerPadding = 0.24f;
         const float spacing = 0.08f * GetScreenHeight();
 
         // Default fontsize is 10
-        GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER); // Center text in label control
 
-        Rectangle containerBounds = {containerPadding * GetScreenWidth(), containerPadding * GetScreenHeight(), GetScreenWidth() - containerPadding * GetScreenWidth() * 2, GetScreenHeight() - containerPadding * GetScreenHeight() * 2};
+        GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
+        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+
         const char *menuLabels[7] = {"Inventário de Equipamentos da Rede", "Testes de Conectividade", "Monitorização de Sensores", "Incidentes Técnicos", "Registo de Configurações", "Relatórios Técnicos", "Exit"};
         for (int i = 0; i < 7; i++)
         {
-            GuiLabel((Rectangle){containerBounds.x, containerBounds.y + (i * spacing), containerBounds.width, 24}, menuLabels[i]);
+            // GuiLabel((Rectangle){containerBounds.x, containerBounds.y + (i * spacing), containerBounds.width, 24}, menuLabels[i]);
+            if (GuiLabelButton((Rectangle){GetScreenWidth() / 2 - ((MeasureText(menuLabels[i], fontSize)) / 2.0f), containerPadding * GetScreenHeight() + (i * spacing), MeasureText(menuLabels[i], (int)fontSize), fontSize}, menuLabels[i]))
+            {
+                switch (i)
+                {
+                case 0:
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    break;
+                case 5:
+                    break;
+                case 6:
+                    return closeWindow();
+                default:
+                    break;
+                }
+            }
         }
 
         EndDrawing();
     }
 
     // De-Initialization
-    CloseAudioDevice();
-    CloseWindow();
-    return 0;
+    return closeWindow();
 }
