@@ -5,6 +5,7 @@
 
 int main()
 {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 400, "Mini NOC");
 
     // Start Music
@@ -71,14 +72,14 @@ int main()
         // Draw main menu
 
         // Default fontsize is 10
-        GuiSetStyle(DEFAULT, TEXT_SIZE, 20);                   // To reset call same function with default value (10)
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER); // Center text in label control
+        GuiSetStyle(DEFAULT, TEXT_SIZE, 0.05 * GetScreenHeight()); // To reset call same function with default value (10)
+        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);     // Center text in label control
 
-        Rectangle containerBounds = {96 * 2, 32 * 3, GetScreenWidth() - 96 * 4, GetScreenHeight() - 32 * 6};
-        const char *menuLabels[6] = {"Inventário de Equipamentos da Rede", "Testes de Conectividade", "Monitorização de Sensores", "Incidentes Técnicos", "Registo de Configurações", "Relatórios Técnicos"};
-        for (int i = 0; i < 6; i++)
+        Rectangle containerBounds = {0.24 * GetScreenWidth(), 0.24 * GetScreenHeight(), GetScreenWidth() - 0.24 * GetScreenWidth() * 2, GetScreenHeight() - 0.24 * GetScreenHeight() * 2};
+        const char *menuLabels[7] = {"Inventário de Equipamentos da Rede", "Testes de Conectividade", "Monitorização de Sensores", "Incidentes Técnicos", "Registo de Configurações", "Relatórios Técnicos", "Exit"};
+        for (int i = 0; i < 7; i++)
         {
-            GuiLabel((Rectangle){containerBounds.x, containerBounds.y + i * 24, containerBounds.width, 24}, menuLabels[i]);
+            GuiLabel((Rectangle){containerBounds.x, containerBounds.y + (i * 0.08 * GetScreenHeight()), containerBounds.width, 24}, menuLabels[i]);
         }
 
         EndDrawing();
