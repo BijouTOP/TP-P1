@@ -60,8 +60,6 @@ int main()
         const float iconSize = 16 * iconScale;
         const float paddingAccountingForIcon = 32 * iconScale;
 
-        DrawRectangleLinesEx((Rectangle){GetScreenWidth() - paddingAccountingForIcon, iconSize, iconSize, iconSize}, 1, BLUE);
-        DrawRectangleLinesEx((Rectangle){GetScreenWidth() - paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize}, 1, BLUE);
         Rectangle FullscreenIcon = {GetScreenWidth() - paddingAccountingForIcon, iconSize, iconSize, iconSize};
         Rectangle MusicIcon = {GetScreenWidth() - paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
 
