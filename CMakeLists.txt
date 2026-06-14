@@ -26,12 +26,19 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
   endif()
 endif()
 
-include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/libraries/raylib/include")
-
 # Our Project
 
-set(FOLDERPATH "./src/")
-add_executable(${PROJECT_NAME} ${FOLDERPATH}main.c)
+add_executable(${PROJECT_NAME} 
+    src/main.c 
+    src/menus.c
+    src/gui.c
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+target_link_libraries(${PROJECT_NAME} raylib)
 #set(raylib_VERBOSE 1)
 
 
@@ -40,10 +47,6 @@ if(MSVC)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -Werror -Wpedantic")
 endif()
-
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/libraries/raylib/include")
-
-target_link_libraries(${PROJECT_NAME} raylib)
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")

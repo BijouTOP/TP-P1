@@ -1,7 +1,14 @@
+#include "menus.h"
+
 #include "raylib.h"
 
-#define RAYGUI_IMPLEMENTATION
+// Disable unused parameter warnings specifically for raygui
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include "raygui.h"
+
+#pragma GCC diagnostic pop
 
 #define DEFAULTWIDTH 800
 #define DEFAULTHEIGHT 400
@@ -18,12 +25,9 @@
 
 #define FRAME_RATE 60
 
-int closeWindow()
-{
-    CloseAudioDevice();
-    CloseWindow();
-    return 0;
-}
+int MusicState = 0; // 0 - Stopped, 1 - Playing
+int menu = 0;       // 0 - Main Menu, 1 - Inventory, 2 - Connectivity Tests, 3 - Sensor Monitoring, 4 - Technical Incidents, 5 - Configuration Records, 6 - Technical Reports
+
 int main()
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
@@ -35,9 +39,11 @@ int main()
     SetMusicVolume(music, MUSIC_VOLUME);
     PlayMusicStream(music);
     PauseMusicStream(music);
-    int MusicState = 0; // 0 - Stopped, 1 - Playing
 
     SetTargetFPS(FRAME_RATE);
+
+    // Inside main()
+    unsigned int *guiIcons = GetGuiIcons();
 
     // Custom icon made with rguiicons, https://raylibtech.itch.io/rguiicons
     unsigned int AudioMutedIcon[8] = {0x00000000, 0x00a000c0, 0x00880090, 0x00820086, 0x00860082, 0x00900088, 0x00c000a0, 0x00000000};
@@ -61,7 +67,9 @@ int main()
         const float paddingAccountingForIcon = 32 * iconScale;
 
         Rectangle FullscreenIcon = {GetScreenWidth() - paddingAccountingForIcon, iconSize, iconSize, iconSize};
-        Rectangle MusicIcon = {GetScreenWidth() - paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
+        Rectangle ExitIcon = {GetScreenWidth() - paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
+        Rectangle MusicIcon = {GetScreenWidth() - 1.5 * paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
+        Rectangle HomeIcon = {paddingAccountingForIcon / 2, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -73,6 +81,11 @@ int main()
         if (CheckCollisionPointRec(GetMousePosition(), FullscreenIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             ToggleFullscreen();
+        }
+        GuiDrawIcon(158, ExitIcon.x, ExitIcon.y, iconScale, BLACK);
+        if (CheckCollisionPointRec(GetMousePosition(), ExitIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            return closeWindow();
         }
         if (MusicState == 0)
         {
@@ -95,7 +108,11 @@ int main()
                 MusicState = 0;
             }
         }
-
+        GuiDrawIcon(185, HomeIcon.x, HomeIcon.y, iconScale, BLACK);
+        if (CheckCollisionPointRec(GetMousePosition(), HomeIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            menu = 0;
+        }
         // To reset call same function with default value (10)
         float fontSize = 0.05 * GetScreenHeight();
 
@@ -109,42 +126,32 @@ int main()
             fontSize = 0.05 * GetScreenWidth();
         }
 
-        const float containerPadding = 0.24f;
-        const float spacing = 0.08f * GetScreenHeight();
-
-        // Default fontsize is 10
-
-        GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
-
-        const char *menuLabels[7] = {"Inventário de Equipamentos da Rede", "Testes de Conectividade", "Monitorização de Sensores", "Incidentes Técnicos", "Registo de Configurações", "Relatórios Técnicos", "Exit"};
-        for (int i = 0; i < 7; i++)
+        switch (menu)
         {
-            // GuiLabel((Rectangle){containerBounds.x, containerBounds.y + (i * spacing), containerBounds.width, 24}, menuLabels[i]);
-            if (GuiLabelButton((Rectangle){GetScreenWidth() / 2 - ((MeasureText(menuLabels[i], fontSize)) / 2.0f), containerPadding * GetScreenHeight() + (i * spacing), MeasureText(menuLabels[i], (int)fontSize), fontSize}, menuLabels[i]))
+        case 0:
+            if (drawMainMenu(fontSize) != 0)
             {
-                switch (i)
-                {
-                case 0:
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    break;
-                case 4:
-                    break;
-                case 5:
-                    break;
-                case 6:
-                    return closeWindow();
-                default:
-                    break;
-                }
+                menu = drawMainMenu(fontSize);
             }
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            return closeWindow();
+            break;
+        default:
+            break;
         }
-
         EndDrawing();
     }
 
