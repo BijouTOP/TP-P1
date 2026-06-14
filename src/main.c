@@ -1,4 +1,6 @@
 #include "menus.h"
+#include "utils.h"
+#include "inventory.h"
 
 #include "raylib.h"
 
@@ -20,8 +22,13 @@
 
 #define MUSIC_VOLUME 0.2f
 
+#define FULLSCREEN_ICON_ID 107
+#define HOME_ICON_ID 185
 #define AUDIO_UNMUTED_ICON_ID 122
 #define AUDIO_MUTED_ICON_ID 123
+#define EXIT_ICON_ID 158
+#define ADD_ICON_ID 220
+#define MINUS_ICON_ID 221
 
 #define FRAME_RATE 60
 
@@ -47,6 +54,8 @@ int main()
 
     // Custom icon made with rguiicons, https://raylibtech.itch.io/rguiicons
     unsigned int AudioMutedIcon[8] = {0x00000000, 0x00a000c0, 0x00880090, 0x00820086, 0x00860082, 0x00900088, 0x00c000a0, 0x00000000};
+    unsigned int AddIcon[8] = {0x01800000, 0x01800180, 0x01800180, 0x7ffe0180, 0x01807ffe, 0x01800180, 0x01800180, 0x00000180};
+    unsigned int MinusIcon[8] = {0x00000000, 0x00000000, 0x00000000, 0x7ffe0000, 0x00007ffe, 0x00000000, 0x00000000, 0x00000000};
 
     // Main application loop
     while (!WindowShouldClose())
@@ -57,6 +66,14 @@ int main()
         for (int i = 0; i < 8; i++)
         {
             guiIcons[AUDIO_MUTED_ICON_ID * 8 + i] = AudioMutedIcon[i];
+        }
+        for (int i = 0; i < 8; i++)
+        {
+            guiIcons[ADD_ICON_ID * 8 + i] = AddIcon[i];
+        }
+        for (int i = 0; i < 8; i++)
+        {
+            guiIcons[MINUS_ICON_ID * 8 + i] = MinusIcon[i];
         }
 
         // Define icons rectangles
@@ -77,12 +94,12 @@ int main()
         ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
         // Draw icons and check for mouse interaction
-        GuiDrawIcon(107, FullscreenIcon.x, FullscreenIcon.y, iconScale, BLACK);
+        GuiDrawIcon(FULLSCREEN_ICON_ID, FullscreenIcon.x, FullscreenIcon.y, iconScale, BLACK);
         if (CheckCollisionPointRec(GetMousePosition(), FullscreenIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             ToggleFullscreen();
         }
-        GuiDrawIcon(158, ExitIcon.x, ExitIcon.y, iconScale, BLACK);
+        GuiDrawIcon(EXIT_ICON_ID, ExitIcon.x, ExitIcon.y, iconScale, BLACK);
         if (CheckCollisionPointRec(GetMousePosition(), ExitIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             return closeWindow();
@@ -108,7 +125,7 @@ int main()
                 MusicState = 0;
             }
         }
-        GuiDrawIcon(185, HomeIcon.x, HomeIcon.y, iconScale, BLACK);
+        GuiDrawIcon(HOME_ICON_ID, HomeIcon.x, HomeIcon.y, iconScale, BLACK);
         if (CheckCollisionPointRec(GetMousePosition(), HomeIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             menu = 0;
@@ -135,6 +152,7 @@ int main()
             }
             break;
         case 1:
+            drawInventory(fontSize, paddingAccountingForIcon, iconSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID);
             break;
         case 2:
             break;

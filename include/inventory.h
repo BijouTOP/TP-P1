@@ -1,0 +1,1 @@
+void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSize, float iconScale, int addIconId, int minusIconId);

@@ -10,13 +10,6 @@
 
 #pragma GCC diagnostic pop
 
-int closeWindow()
-{
-    CloseAudioDevice();
-    CloseWindow();
-    return 0;
-}
-
 int drawMainMenu(float fontSize)
 {
     const float containerPadding = 0.24f;
