@@ -1,6 +1,7 @@
 #include "menus.h"
 #include "utils.h"
 #include "inventory.h"
+#include "incidentes.h"
 
 #include "raylib.h"
 
@@ -92,6 +93,12 @@ int main()
         Rectangle MusicIcon = {GetScreenWidth() - 1.5 * paddingAccountingForIcon, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
         Rectangle HomeIcon = {paddingAccountingForIcon / 2, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
 
+        Rectangle AddIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
+        Rectangle DownloadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) / 2 + 15, iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
+        Rectangle UploadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) + 30, iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
+
+        Rectangle bounds = {iconSize + paddingAccountingForIcon, iconSize + paddingAccountingForIcon, GetScreenWidth() - paddingAccountingForIcon * 3, GetScreenHeight() - paddingAccountingForIcon * 3};
+
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
@@ -162,13 +169,14 @@ int main()
             }
             break;
         case 1:
-            drawInventory(fontSize, paddingAccountingForIcon, iconSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID);
+            drawInventory(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
         case 2:
             break;
         case 3:
             break;
         case 4:
+            drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
         case 5:
             break;

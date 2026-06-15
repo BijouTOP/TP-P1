@@ -1,4 +1,4 @@
-// Falta fazer verificaçoes modal / pequeno bug dropdown can hover modificar / ordenar when loading from file
+// Falta fazer verificaçoes modal / pequeno bug dropdown can hover modificar / ordenar when loading from file / DELETE INCIDENTES TECNICOS
 
 #include "inventory.h"
 
@@ -11,6 +11,8 @@
 #include "raygui.h"
 
 #pragma GCC diagnostic pop
+
+#include "utils.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -191,17 +193,6 @@ void saveItem(char name[50], char brand[50], char model[50], char ip[16], char m
         activeStatus = 0;
     }
 }
-void drawTextBoxWithPlaceholder(Rectangle bounds, char *text, int textSize, bool *editMode, const char *placeholder)
-{
-    if (strlen(text) == 0 && !(*editMode))
-    {
-        GuiLabel(bounds, placeholder);
-    }
-    if (GuiTextBox(bounds, text, textSize, *editMode))
-    {
-        *editMode = !(*editMode);
-    }
-}
 
 void showModal(char itemName[50], char itemBrand[50], char itemModel[50], char itemIp[16], char itemMac[18], char itemLocation[100], char itemLastMaintenanceDate[11], int *activeType, int *activeStatus)
 {
@@ -302,7 +293,7 @@ void showModal(char itemName[50], char itemBrand[50], char itemModel[50], char i
         EndScissorMode();
     }
 }
-void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId)
+void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds)
 {
     if (fontSize > 22)
     {
@@ -312,9 +303,6 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
     {
         GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
     }
-    Rectangle AddIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
-    Rectangle DownloadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) / 2 + 15, iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
-    Rectangle UploadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) + 30, iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
 
     if (showAddItemDialog && !isEditing)
     {
@@ -331,19 +319,17 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
     GuiDrawIcon(UploadIconId, UploadIconRect.x, UploadIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
     if (CheckCollisionPointRec(GetMousePosition(), UploadIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
-        loadInventoryFromFile("inventory.dat");
+        loadInventoryFromFile("incidentes.dat");
     }
     GuiDrawIcon(DownloadIconId, DownloadIconRect.x, DownloadIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
     if (CheckCollisionPointRec(GetMousePosition(), DownloadIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
     {
-        saveInventoryToFile("inventory.dat");
+        saveInventoryToFile("incidentes.dat");
     }
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
     float searchLenght = MeasureText("Pesquisar...", fontSize > 22 ? 22 : fontSize);
     float typeLenght = MeasureText("ACCESS_POINT", fontSize > 22 ? 22 : fontSize);
     float statusLenght = MeasureText("OPERACIONAL", fontSize > 22 ? 22 : fontSize);
-
-    Rectangle bounds = {iconSize + paddingAccountingForIcon, iconSize + paddingAccountingForIcon, GetScreenWidth() - paddingAccountingForIcon * 3, GetScreenHeight() - paddingAccountingForIcon * 3};
     bool isNotBullied = (bounds.width - typeLenght - statusLenght - 10) > searchLenght;
     float searchBullyDefender = isNotBullied ? bounds.width - typeLenght - statusLenght - 10 : 0.34 * bounds.width - 10;
     Rectangle searchBounds = {bounds.x, bounds.y - fontSizeForButtons - 5, searchBullyDefender, fontSizeForButtons};

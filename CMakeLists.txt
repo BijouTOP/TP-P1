@@ -32,8 +32,10 @@ add_executable(${PROJECT_NAME}
     src/main.c 
     src/menus.c
     src/inventory.c
+    src/incidentes.c
     src/utils.c
     src/gui.c
+
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
