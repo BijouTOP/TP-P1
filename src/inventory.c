@@ -1,3 +1,5 @@
+// Falta fazer verificaçoes modal
+
 #include "inventory.h"
 
 #include "raylib.h"
@@ -255,11 +257,11 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
     {
         GuiDrawIcon(MinusIconId, AddIconRect.x, AddIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
     }
-    else if (!showAddItemDialog && !isEditing)
+    else if (!showAddItemDialog)
     {
         GuiDrawIcon(AddIconId, AddIconRect.x, AddIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
     }
-    if (CheckCollisionPointRec(GetMousePosition(), AddIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    if (CheckCollisionPointRec(GetMousePosition(), AddIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !isEditing)
     {
         showAddItemDialog = !showAddItemDialog;
     }
