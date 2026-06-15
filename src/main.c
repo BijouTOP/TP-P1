@@ -31,6 +31,8 @@
 #define EXIT_ICON_ID 158
 #define ADD_ICON_ID 220
 #define MINUS_ICON_ID 221
+#define UPLOAD_ICON_ID 5
+#define DOWNLOAD_ICON_ID 6
 
 #define FRAME_RATE 60
 
@@ -160,7 +162,7 @@ int main()
             }
             break;
         case 1:
-            drawInventory(fontSize, paddingAccountingForIcon, iconSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID);
+            drawInventory(fontSize, paddingAccountingForIcon, iconSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID);
             break;
         case 2:
             break;

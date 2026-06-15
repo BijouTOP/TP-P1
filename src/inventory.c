@@ -1,4 +1,4 @@
-// Falta fazer verificaçoes modal pequeno bug dropdown can hover modificar
+// Falta fazer verificaçoes modal / pequeno bug dropdown can hover modificar / ordenar when loading from file
 
 #include "inventory.h"
 
@@ -89,6 +89,56 @@ bool filterTypeEdit = false;
 
 int filterStatus = 0;
 bool filterStatusEdit = false;
+
+void saveInventoryToFile(const char *filename)
+{
+    FILE *file = fopen(filename, "wb");
+
+    if (file == NULL)
+        return;
+
+    Node *current = inventoryList;
+
+    while (current != NULL)
+    {
+        fwrite(&current->item, sizeof(InventoryItem), 1, file);
+        current = current->next;
+    }
+
+    fclose(file);
+}
+
+void loadInventoryFromFile(const char *filename)
+{
+    FILE *file = fopen(filename, "rb");
+
+    if (file == NULL)
+        return;
+
+    // clearInventory();
+
+    InventoryItem tempItem;
+
+    while (fread(&tempItem, sizeof(InventoryItem), 1, file) == 1)
+    {
+        Node *newNode = malloc(sizeof(Node));
+
+        if (newNode == NULL)
+            break;
+
+        newNode->item = tempItem;
+        newNode->next = inventoryList;
+        inventoryList = newNode;
+    }
+
+    if (tempItem.internalCode >= nextInternalCode)
+    {
+        nextInternalCode = tempItem.internalCode + 1;
+    }
+
+    fclose(file);
+}
+
 void saveItem(char name[50], char brand[50], char model[50], char ip[16], char mac[18], char location[100], char maintenanceDate[11], int *type, int *status)
 {
     if (isEditing && nodeBeingEdited != NULL)
@@ -252,7 +302,7 @@ void showModal(char itemName[50], char itemBrand[50], char itemModel[50], char i
         EndScissorMode();
     }
 }
-void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSize, float iconScale, int AddIconId, int MinusIconId)
+void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId)
 {
     if (fontSize > 22)
     {
@@ -262,8 +312,10 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
     {
         GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
     }
-
     Rectangle AddIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
+    Rectangle DownloadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) / 2 + 15, iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
+    Rectangle UploadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) + 30, iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
+
     if (showAddItemDialog && !isEditing)
     {
         GuiDrawIcon(MinusIconId, AddIconRect.x, AddIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
@@ -275,6 +327,16 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
     if (CheckCollisionPointRec(GetMousePosition(), AddIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !isEditing)
     {
         showAddItemDialog = !showAddItemDialog;
+    }
+    GuiDrawIcon(UploadIconId, UploadIconRect.x, UploadIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
+    if (CheckCollisionPointRec(GetMousePosition(), UploadIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        loadInventoryFromFile("inventory.dat");
+    }
+    GuiDrawIcon(DownloadIconId, DownloadIconRect.x, DownloadIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
+    if (CheckCollisionPointRec(GetMousePosition(), DownloadIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        saveInventoryToFile("inventory.dat");
     }
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
     float searchLenght = MeasureText("Pesquisar...", fontSize > 22 ? 22 : fontSize);
