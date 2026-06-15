@@ -14,11 +14,11 @@
 
 #include <math.h>
 
-#define DEFAULTWIDTH 800
-#define DEFAULTHEIGHT 400
+#define DEFAULTWIDTH 1000
+#define DEFAULTHEIGHT 600
 
-#define MINIMUMWIDTH 362
-#define MINIMUMHEIGHT 200
+#define MINIMUMWIDTH 640
+#define MINIMUMHEIGHT 480
 
 #define MUSICPATH "media/music.ogg"
 

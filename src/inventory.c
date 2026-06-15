@@ -1,4 +1,4 @@
-// Falta fazer verificaçoes modal
+// Falta fazer verificaçoes modal pequeno bug dropdown can hover modificar
 
 #include "inventory.h"
 
@@ -23,8 +23,8 @@ typedef enum
     ACCESS_POINT,
     SERVER,
     NAS,
-    PRINTER,
-    CAMERA,
+    IMPRESSORA,
+    CAMARA,
     SENSOR,
     UPS
 } EquipmentType;
@@ -54,6 +54,7 @@ typedef struct Node
     InventoryItem item;
     struct Node *next;
 } Node;
+int nextInternalCode = 1;
 char itemName[50] = "";
 char itemBrand[50] = "";
 char itemModel[50] = "";
@@ -79,6 +80,15 @@ Rectangle viewDialog = {0};
 
 bool isEditing = false;
 Node *nodeBeingEdited = NULL;
+
+char searchText[50] = "";
+bool searchEdit = false;
+
+int filterType = 0;
+bool filterTypeEdit = false;
+
+int filterStatus = 0;
+bool filterStatusEdit = false;
 void saveItem(char name[50], char brand[50], char model[50], char ip[16], char mac[18], char location[100], char maintenanceDate[11], int *type, int *status)
 {
     if (isEditing && nodeBeingEdited != NULL)
@@ -100,6 +110,8 @@ void saveItem(char name[50], char brand[50], char model[50], char ip[16], char m
     else
     {
         Node *newNode = (Node *)malloc(sizeof(Node));
+
+        newNode->item.internalCode = nextInternalCode++;
 
         strncpy(newNode->item.name, name, 50);
         strncpy(newNode->item.brand, brand, 50);
@@ -242,7 +254,6 @@ void showModal(char itemName[50], char itemBrand[50], char itemModel[50], char i
 }
 void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSize, float iconScale, int AddIconId, int MinusIconId)
 {
-
     if (fontSize > 22)
     {
         GuiSetStyle(DEFAULT, TEXT_SIZE, 22);
@@ -265,30 +276,58 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
     {
         showAddItemDialog = !showAddItemDialog;
     }
+    float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
+    float searchLenght = MeasureText("Pesquisar...", fontSize > 22 ? 22 : fontSize);
+    float typeLenght = MeasureText("ACCESS_POINT", fontSize > 22 ? 22 : fontSize);
+    float statusLenght = MeasureText("OPERACIONAL", fontSize > 22 ? 22 : fontSize);
 
     Rectangle bounds = {iconSize + paddingAccountingForIcon, iconSize + paddingAccountingForIcon, GetScreenWidth() - paddingAccountingForIcon * 3, GetScreenHeight() - paddingAccountingForIcon * 3};
+    bool isNotBullied = (bounds.width - typeLenght - statusLenght - 10) > searchLenght;
+    float searchBullyDefender = isNotBullied ? bounds.width - typeLenght - statusLenght - 10 : 0.34 * bounds.width - 10;
+    Rectangle searchBounds = {bounds.x, bounds.y - fontSizeForButtons - 5, searchBullyDefender, fontSizeForButtons};
+    Rectangle typeBounds = {searchBounds.x + searchBounds.width + 5, searchBounds.y, isNotBullied ? typeLenght : 0.33 * bounds.width, fontSizeForButtons};
+    Rectangle statusBounds = {typeBounds.x + typeBounds.width + 5, searchBounds.y, isNotBullied ? statusLenght : 0.33 * bounds.width, fontSizeForButtons};
     Rectangle content = {0, 0, 500, 500};
+    GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
-    GuiScrollPanel(bounds, "Inventario", content, &scrollItems, &viewItems);
+    drawTextBoxWithPlaceholder(searchBounds, searchText, 50, &searchEdit, "Pesquisar...");
 
     Node *current = inventoryList;
-
+    GuiScrollPanel(bounds, "Inventario", content, &scrollItems, &viewItems);
     BeginScissorMode(bounds.x, bounds.y, bounds.width, bounds.height);
 
     float modificarLenght = MeasureText("Modificar", fontSize > 22 ? 22 : fontSize);
     float deletarLenght = MeasureText("Deletar", fontSize > 22 ? 22 : fontSize);
-    float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
 
     for (int i = 0; current != NULL; i++)
     {
+        bool matchesCode = strlen(searchText) > 0 && atoi(searchText) == current->item.internalCode;
+        bool matchesSearch = strlen(searchText) == 0 || strstr(current->item.name, searchText) != NULL || strstr(current->item.ipAddress, searchText) != NULL || strstr(current->item.macAddress, searchText) != NULL || matchesCode;
+        bool matchesType = filterType == 0 || current->item.type == (EquipmentType)(filterType - 1);
+        bool matchesStatus = filterStatus == 0 || current->item.status == (EquipmentStatus)(filterStatus - 1);
+
+        if (!(matchesSearch && matchesType && matchesStatus))
+        {
+            i--;
+            current = current->next;
+            continue;
+        }
+
         GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
         Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + scrollItems.y, bounds.width - 70 - modificarLenght - deletarLenght, fontSizeForButtons};
         Rectangle deleteButtonBounds = {bounds.x + bounds.width - 30 - deletarLenght, itemBounds.y, deletarLenght + 10, fontSizeForButtons};
         Rectangle modifyButtonBounds = {bounds.x + bounds.width - 50 - modificarLenght - deletarLenght, itemBounds.y, modificarLenght + 10, fontSizeForButtons};
 
-        GuiLabel(itemBounds, current->item.name);
+        char displayText[100];
 
-        if (GuiButton(modifyButtonBounds, "Modificar"))
+        snprintf(displayText, sizeof(displayText),
+                 "%d - %s",
+                 current->item.internalCode,
+                 current->item.name);
+
+        GuiLabel(itemBounds, displayText);
+
+        if (GuiButton(modifyButtonBounds, "Modificar") && !showAddItemDialog && !filterStatusEdit && !filterTypeEdit)
         {
             isEditing = true;
             nodeBeingEdited = current;
@@ -297,7 +336,7 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
             MactiveStatus = current->item.status;
         }
 
-        if (GuiButton(deleteButtonBounds, "Deletar"))
+        if (GuiButton(deleteButtonBounds, "Deletar") && !showAddItemDialog && !filterStatusEdit && !filterTypeEdit)
         {
             Node *temp = inventoryList;
             Node *prev = NULL;
@@ -322,6 +361,12 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
         current = current->next;
     }
     EndScissorMode();
+
+    if (GuiDropdownBox(typeBounds, "Todos;Router;Switch;Access Point;Server;NAS;Printer;Camera;Sensor;UPS", &filterType, filterTypeEdit))
+        filterTypeEdit = !filterTypeEdit;
+
+    if (GuiDropdownBox(statusBounds, "Todos;Operacional;Em Manutenção;Em Falha;Desativado", &filterStatus, filterStatusEdit))
+        filterStatusEdit = !filterStatusEdit;
 
     if (showAddItemDialog && !isEditing)
     {
