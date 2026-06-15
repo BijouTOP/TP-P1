@@ -10,8 +10,9 @@
 
 #pragma GCC diagnostic pop
 
-#include "string.h"
-#include "stdio.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef enum
 {
@@ -25,7 +26,15 @@ typedef enum
     SENSOR,
     UPS
 } EquipmentType;
-typedef struct
+typedef enum
+{
+    OPERACIONAL,
+    MANUTENCAO,
+    FALHA,
+    DESATIVADO
+} EquipmentStatus;
+
+typedef struct InventoryItem
 {
     int internalCode;
     char name[50];
@@ -35,10 +44,10 @@ typedef struct
     char ipAddress[16];
     char macAddress[18];
     char location[100];
-    char status[20];
+    EquipmentStatus status;
     char lastMaintenanceDate[11];
 } InventoryItem;
-typedef struct
+typedef struct Node
 {
     InventoryItem item;
     struct Node *next;
@@ -51,15 +60,43 @@ char itemMac[18] = "";
 char itemLocation[100] = "";
 char itemStatus[20] = "";
 char itemLastMaintenanceDate[11] = "";
-bool editModes[7] = {false};
+bool editModes[9] = {false};
+int activeItems[2] = {0};
 bool showAddItemDialog = false;
+Node *inventoryList = NULL;
 
 Vector2 scrollItems = {0, 0};
 Rectangle viewItems = {0};
 
 Vector2 scrollDialog = {0, 0};
 Rectangle viewDialog = {0};
+void saveItem()
+{
+    Node *newNode = (Node *)malloc(sizeof(Node));
 
+    strncpy(newNode->item.name, itemName, 50);
+    strncpy(newNode->item.brand, itemBrand, 50);
+    strncpy(newNode->item.model, itemModel, 50);
+    strncpy(newNode->item.ipAddress, itemIp, 16);
+    strncpy(newNode->item.macAddress, itemMac, 18);
+    strncpy(newNode->item.location, itemLocation, 100);
+
+    newNode->item.type = (EquipmentType)activeItems[0];
+    newNode->item.status = (EquipmentStatus)activeItems[1];
+
+    newNode->next = inventoryList;
+    inventoryList = newNode;
+
+    itemName[0] = '\0';
+    itemBrand[0] = '\0';
+    itemModel[0] = '\0';
+    itemIp[0] = '\0';
+    itemMac[0] = '\0';
+    itemLocation[0] = '\0';
+    activeItems[0] = 0;
+    activeItems[1] = 0;
+    showAddItemDialog = false;
+}
 void drawTextBoxWithPlaceholder(Rectangle bounds, char *text, int textSize, bool *editMode, const char *placeholder)
 {
     if (strlen(text) == 0 && !(*editMode))
@@ -83,8 +120,6 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
         GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
     }
 
-    GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
-
     Rectangle AddIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : iconSize, iconScale == 1 ? 16 : iconSize};
     if (showAddItemDialog)
     {
@@ -99,11 +134,56 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
         showAddItemDialog = !showAddItemDialog;
     }
 
-    Rectangle bounds = {iconSize + paddingAccountingForIcon, iconSize + paddingAccountingForIcon, GetScreenWidth() - paddingAccountingForIcon * 3, GetScreenHeight() - paddingAccountingForIcon * 3}; // Panel bounds
-    Rectangle content = {0, 0, 500, 500};                                                                                                                                                             // Content size
+    Rectangle bounds = {iconSize + paddingAccountingForIcon, iconSize + paddingAccountingForIcon, GetScreenWidth() - paddingAccountingForIcon * 3, GetScreenHeight() - paddingAccountingForIcon * 3};
+    Rectangle content = {0, 0, 500, 500};
 
     GuiScrollPanel(bounds, "Inventario", content, &scrollItems, &viewItems);
+
+    Node *current = inventoryList;
+
     BeginScissorMode(bounds.x, bounds.y, bounds.width, bounds.height);
+
+    float modificarLenght = MeasureText("Modificar", fontSize > 22 ? 22 : fontSize);
+    float deletarLenght = MeasureText("Deletar", fontSize > 22 ? 22 : fontSize);
+    float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
+
+    for (int i = 0; current != NULL; i++)
+    {
+        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+        Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + scrollItems.y, bounds.width - 70 - modificarLenght - deletarLenght, fontSizeForButtons};
+        Rectangle deleteButtonBounds = {bounds.x + bounds.width - 30 - deletarLenght, itemBounds.y, deletarLenght + 10, fontSizeForButtons};
+        Rectangle modifyButtonBounds = {bounds.x + bounds.width - 50 - modificarLenght - deletarLenght, itemBounds.y, modificarLenght + 10, fontSizeForButtons};
+
+        GuiLabel(itemBounds, current->item.name);
+
+        if (GuiButton(modifyButtonBounds, "Modificar"))
+        {
+        }
+
+        if (GuiButton(deleteButtonBounds, "Deletar"))
+        {
+            Node *temp = inventoryList;
+            Node *prev = NULL;
+
+            while (temp != NULL && temp != current)
+            {
+                prev = temp;
+                temp = temp->next;
+            }
+
+            if (temp == NULL)
+                return;
+
+            if (prev == NULL)
+                inventoryList = temp->next;
+            else
+                prev->next = temp->next;
+
+            free(temp);
+        }
+
+        current = current->next;
+    }
     EndScissorMode();
 
     if (showAddItemDialog)
@@ -116,35 +196,93 @@ void drawInventory(float fontSize, float paddingAccountingForIcon, float iconSiz
 
         const char *placeholders[7] = {"Nome", "Marca", "Modelo", "IP", "MAC", "Localização", "Status"};
 
-        for (int i = 0; i < 7; i++)
+        for (int i = 0; i < 10; i++)
         {
             Rectangle textBoxBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (i * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
 
             switch (i)
             {
             case 0:
-                drawTextBoxWithPlaceholder(textBoxBounds, itemName, fontSize, &editModes[0], placeholders[i]);
+                drawTextBoxWithPlaceholder(textBoxBounds, itemName, 50, &editModes[0], placeholders[0]);
                 break;
             case 1:
-                drawTextBoxWithPlaceholder(textBoxBounds, itemBrand, fontSize, &editModes[1], placeholders[i]);
+                drawTextBoxWithPlaceholder(textBoxBounds, itemBrand, 50, &editModes[1], placeholders[1]);
                 break;
             case 2:
-                drawTextBoxWithPlaceholder(textBoxBounds, itemModel, fontSize, &editModes[2], placeholders[i]);
                 break;
             case 3:
-                drawTextBoxWithPlaceholder(textBoxBounds, itemIp, fontSize, &editModes[3], placeholders[i]);
+                if (editModes[2])
+                {
+                    break;
+                }
+                drawTextBoxWithPlaceholder(textBoxBounds, itemModel, 50, &editModes[3], placeholders[2]);
                 break;
             case 4:
-                drawTextBoxWithPlaceholder(textBoxBounds, itemMac, fontSize, &editModes[4], placeholders[i]);
+                if (editModes[2])
+                {
+                    break;
+                }
+                drawTextBoxWithPlaceholder(textBoxBounds, itemIp, 16, &editModes[4], placeholders[3]);
                 break;
             case 5:
-                drawTextBoxWithPlaceholder(textBoxBounds, itemLocation, fontSize, &editModes[5], placeholders[i]);
+                if (editModes[2])
+                {
+                    break;
+                }
+                drawTextBoxWithPlaceholder(textBoxBounds, itemMac, 18, &editModes[5], placeholders[4]);
                 break;
             case 6:
-                drawTextBoxWithPlaceholder(textBoxBounds, itemStatus, fontSize, &editModes[6], placeholders[i]);
+                if (editModes[2])
+                {
+                    break;
+                }
+                drawTextBoxWithPlaceholder(textBoxBounds, itemLocation, 100, &editModes[6], placeholders[5]);
+                break;
+            case 7:
+                break;
+            case 8:
+                if (editModes[2] || editModes[7])
+                {
+                    break;
+                }
+                drawTextBoxWithPlaceholder(textBoxBounds, itemStatus, 20, &editModes[8], placeholders[6]);
+                break;
+            case 9:
+                if (editModes[2] || editModes[7])
+                {
+                    break;
+                }
+                if (GuiLabelButton(textBoxBounds, "Adicionar Item"))
+                {
+                    saveItem();
+                }
                 break;
             }
         }
-        EndScissorMode();
+        if (editModes[2])
+        {
+            EndScissorMode();
+        }
+        Rectangle dropdownTypeBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (2 * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
+        if (GuiDropdownBox(dropdownTypeBounds, "Router;Switch;Access Point;Server;NAS;Printer;Camera;Sensor;UPS", &activeItems[0], editModes[2]))
+        {
+            editModes[2] = !editModes[2];
+        }
+        if (editModes[7])
+        {
+            EndScissorMode();
+        }
+        Rectangle dropdownStatusBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (7 * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
+        if (!editModes[2])
+        {
+            if (GuiDropdownBox(dropdownStatusBounds, "Operacional;Em Manutenção; Em Falha; Desativado", &activeItems[1], editModes[7]))
+            {
+                editModes[7] = !editModes[7];
+            }
+        }
+        if (!editModes[2] || !editModes[7])
+        {
+            EndScissorMode();
+        }
     }
 }

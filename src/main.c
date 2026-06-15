@@ -12,6 +12,8 @@
 
 #pragma GCC diagnostic pop
 
+#include <math.h>
+
 #define DEFAULTWIDTH 800
 #define DEFAULTHEIGHT 400
 
@@ -134,14 +136,20 @@ int main()
         float fontSize = 0.05 * GetScreenHeight();
 
         // Draw main menu
-        if (GetScreenWidth() > GetScreenHeight())
-        {
-            fontSize = 0.05 * GetScreenHeight();
-        }
-        else
-        {
-            fontSize = 0.05 * GetScreenWidth();
-        }
+        // if (GetScreenWidth() > GetScreenHeight())
+        // {
+        //     fontSize = 0.05 * GetScreenHeight();
+        // }
+        // else
+        // {
+        //     fontSize = 0.05 * GetScreenWidth();
+        // }
+
+        // Calculate the diagonal magnitude
+        float diagonal = sqrtf(GetScreenWidth() * GetScreenWidth() + GetScreenHeight() * GetScreenHeight());
+
+        // Scale based on the diagonal (adjust the 0.035 factor to suit your needs)
+        fontSize = 0.035f * diagonal;
 
         switch (menu)
         {
