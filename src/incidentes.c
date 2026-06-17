@@ -1,4 +1,4 @@
-// 10. Listar incidentes por equipamento ou sensor;//same scroll bug/provavelmente o modal passa clicks mas we have no time ;(
+// same scroll bug/provavelmente o modal passa clicks mas we have no time ;(
 
 #include "incidentes.h"
 #include "utils.h"
@@ -52,7 +52,6 @@ static ScrollVars dialogScroll = {
     .view = {0}};
 
 static bool isEditing = false;
-static IncidentNode *nodeBeingEdited = NULL;
 
 static char searchText[50] = "";
 static bool searchEdit = false;
@@ -63,17 +62,84 @@ static bool filterStatusEdit = false;
 static int filterPriority = 0;
 static bool filterPriorityEdit = false;
 
-// static void clearIncidentes()
-// {
-//     IncidentNode *current = incidentList;
-//     while (current != NULL)
-//     {
-//         IncidentNode *next = current->next;
-//         free(current);
-//         current = next;
-//     }
-//     incidentList = NULL;
-// }
+static void clearIncidentes()
+{
+    IncidentNode *current = incidentList;
+
+    while (current != NULL)
+    {
+        IncidentNode *next = current->next;
+
+        free(current);
+
+        current = next;
+    }
+
+    incidentList = NULL;
+}
+void saveIncidentsToFile(const char *filename)
+{
+    FILE *f = fopen(filename, "wb");
+
+    if (!f)
+        return;
+
+    IncidentNode *current = incidentList;
+
+    while (current)
+    {
+        fwrite(
+            &current->incident,
+            sizeof(Incident),
+            1,
+            f);
+
+        current = current->next;
+    }
+
+    fclose(f);
+}
+void loadIncidentsFromFile(const char *filename)
+{
+    clearIncidentes();
+
+    nextInternalCode = 1;
+    showInfoForId = -1;
+    FILE *f = fopen(filename, "rb");
+
+    if (!f)
+        return;
+
+    Incident temp;
+
+    while (fread(&temp, sizeof(Incident), 1, f))
+    {
+        IncidentNode *node =
+            malloc(sizeof(IncidentNode));
+
+        node->incident = temp;
+        node->next = NULL;
+
+        if (!incidentList)
+        {
+            incidentList = node;
+        }
+        else
+        {
+            IncidentNode *tail = incidentList;
+
+            while (tail->next)
+                tail = tail->next;
+
+            tail->next = node;
+        }
+
+        if (temp.id >= nextInternalCode)
+            nextInternalCode = temp.id + 1;
+    }
+
+    fclose(f);
+}
 static void copy(IncidentNode *node, Incident *item)
 {
     strncpy(node->incident.equipmentCode, item->equipmentCode, 50);
@@ -81,7 +147,7 @@ static void copy(IncidentNode *node, Incident *item)
     strncpy(node->incident.description, item->description, 50);
     strncpy(node->incident.technician, item->technician, 50);
     strncpy(node->incident.createdAt, item->createdAt, 30);
-    node->incident.concludedAt[0] = '\0';
+    strncpy(node->incident.concludedAt, item->concludedAt, 30);
 
     node->incident.status = item->status;
     node->incident.priority = item->priority;
@@ -95,40 +161,34 @@ static void saveItem(Incident *item, DropdownVarIncidentes *drop)
     struct tm tm = *localtime(&t);
     snprintf(item->createdAt, sizeof(item->createdAt),
              "%02d-%02d-%04d %02d:%02d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min);
-    if (isEditing && nodeBeingEdited != NULL)
+
+    if (item->status == INCIDENTE_CONCLUIDO)
+        strncpy(item->concludedAt, item->createdAt, 30);
+    else
+        item->concludedAt[0] = '\0';
+
+    IncidentNode *newNode = (IncidentNode *)malloc(sizeof(IncidentNode));
+
+    newNode->incident.id = nextInternalCode++;
+
+    copy(newNode, item);
+
+    newNode->next = NULL;
+    if (incidentList == NULL)
     {
-        copy(nodeBeingEdited, item);
-        isEditing = false;
-        nodeBeingEdited = NULL;
+        incidentList = newNode;
     }
     else
     {
-        IncidentNode *newNode = (IncidentNode *)malloc(sizeof(IncidentNode));
-
-        newNode->incident.id = nextInternalCode++;
-
-        copy(newNode, item);
-
-        newNode->next = NULL;
-        if (incidentList == NULL)
-        {
-            incidentList = newNode;
-        }
-        else
-        {
-            IncidentNode *tail = incidentList;
-            while (tail->next != NULL)
-                tail = tail->next;
-            tail->next = newNode;
-        }
-
-        showAddIncidenteDialog = false;
-
-        *item = emptyIncident;
-
-        // drop->type = 0;
-        // drop->status = 0;
+        IncidentNode *tail = incidentList;
+        while (tail->next != NULL)
+            tail = tail->next;
+        tail->next = newNode;
     }
+
+    showAddIncidenteDialog = false;
+
+    *item = emptyIncident;
 }
 static void showModal(Incident *item, DropdownVarIncidentes *drop)
 {
@@ -225,11 +285,11 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
     }
     if (drawIconWcollisions(UploadIconId, iconScale == 1 ? 1 : 2, UploadIconRect))
     {
-        // loadInventoryFromFile("incidentes.dat");
+        loadIncidentsFromFile("incidentes.dat");
     }
     if (drawIconWcollisions(DownloadIconId, iconScale == 1 ? 1 : 2, DownloadIconRect))
     {
-        // saveInventoryToFile("incidentes.dat");
+        saveIncidentsToFile("incidentes.dat");
     }
 
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
@@ -258,8 +318,8 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
     {
         bool matchesSearch = strlen(searchText) == 0 ||
                              strstr(current->incident.technician, searchText) != NULL ||
+                             strstr(current->incident.equipmentCode, searchText) != NULL ||
                              (atoi(searchText) != 0 && atoi(searchText) == current->incident.id);
-
         bool matchesStatus = filterStatus == 0 ||
                              current->incident.status == (IncidentStatus)(filterStatus - 1);
 
