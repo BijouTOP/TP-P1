@@ -310,11 +310,11 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
     }
     if (drawIconWcollisions(UploadIconId, iconScale == 1 ? 1 : 2, UploadIconRect))
     {
-        loadInventoryFromFile("incidentes.dat");
+        loadInventoryFromFile("equipamentos.dat");
     }
     if (drawIconWcollisions(DownloadIconId, iconScale == 1 ? 1 : 2, DownloadIconRect))
     {
-        saveInventoryToFile("incidentes.dat");
+        saveInventoryToFile("equipamentos.dat");
     }
 
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
@@ -357,8 +357,8 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
 
         GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
         Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + itemsScroll.scroll.y, bounds.width - 70 - modificarLenght - deletarLenght, fontSizeForButtons};
-        Rectangle deleteButtonBounds = {bounds.x + bounds.width - 30 - deletarLenght, itemBounds.y, deletarLenght + 10, fontSizeForButtons};
         Rectangle modifyButtonBounds = {bounds.x + bounds.width - 50 - modificarLenght - deletarLenght, itemBounds.y, modificarLenght + 10, fontSizeForButtons};
+        Rectangle deleteButtonBounds = {bounds.x + bounds.width - 30 - deletarLenght, itemBounds.y, deletarLenght + 10, fontSizeForButtons};
 
         char displayText[100];
 
