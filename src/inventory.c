@@ -92,7 +92,7 @@ bool filterTypeEdit = false;
 int filterStatus = 0;
 bool filterStatusEdit = false;
 
-void saveInventoryToFile(const char *filename)
+static void saveInventoryToFile(const char *filename)
 {
     FILE *file = fopen(filename, "wb");
 
@@ -110,7 +110,7 @@ void saveInventoryToFile(const char *filename)
     fclose(file);
 }
 
-void loadInventoryFromFile(const char *filename)
+static void loadInventoryFromFile(const char *filename)
 {
     FILE *file = fopen(filename, "rb");
 
@@ -140,22 +140,24 @@ void loadInventoryFromFile(const char *filename)
 
     fclose(file);
 }
+static void copy(Node *node, char name[50], char brand[50], char model[50], char ip[16], char mac[18], char location[100], char maintenanceDate[11], int *type, int *status)
+{
+    strncpy(node->item.name, name, 50);
+    strncpy(node->item.brand, brand, 50);
+    strncpy(node->item.model, model, 50);
+    strncpy(node->item.ipAddress, ip, 16);
+    strncpy(node->item.macAddress, mac, 18);
+    strncpy(node->item.location, location, 100);
+    strncpy(node->item.lastMaintenanceDate, maintenanceDate, 11);
 
-void saveItem(char name[50], char brand[50], char model[50], char ip[16], char mac[18], char location[100], char maintenanceDate[11], int *type, int *status)
+    node->item.type = (EquipmentType)(*type);
+    node->item.status = (EquipmentStatus)(*status);
+}
+static void saveItem(char name[50], char brand[50], char model[50], char ip[16], char mac[18], char location[100], char maintenanceDate[11], int *type, int *status)
 {
     if (isEditing && nodeBeingEdited != NULL)
     {
-        strncpy(nodeBeingEdited->item.name, name, 50);
-        strncpy(nodeBeingEdited->item.brand, brand, 50);
-        strncpy(nodeBeingEdited->item.model, model, 50);
-        strncpy(nodeBeingEdited->item.ipAddress, ip, 16);
-        strncpy(nodeBeingEdited->item.macAddress, mac, 18);
-        strncpy(nodeBeingEdited->item.location, location, 100);
-        strncpy(nodeBeingEdited->item.lastMaintenanceDate, maintenanceDate, 11);
-
-        nodeBeingEdited->item.type = (EquipmentType)(*type);
-        nodeBeingEdited->item.status = (EquipmentStatus)(*status);
-
+        copy(nodeBeingEdited, name, brand, model, ip, mac, location, maintenanceDate, type, status);
         isEditing = false;
         nodeBeingEdited = NULL;
     }
@@ -165,16 +167,7 @@ void saveItem(char name[50], char brand[50], char model[50], char ip[16], char m
 
         newNode->item.internalCode = nextInternalCode++;
 
-        strncpy(newNode->item.name, name, 50);
-        strncpy(newNode->item.brand, brand, 50);
-        strncpy(newNode->item.model, model, 50);
-        strncpy(newNode->item.ipAddress, ip, 16);
-        strncpy(newNode->item.macAddress, mac, 18);
-        strncpy(newNode->item.location, location, 100);
-        strncpy(newNode->item.lastMaintenanceDate, maintenanceDate, 11);
-
-        newNode->item.type = (EquipmentType)(*type);
-        newNode->item.status = (EquipmentStatus)(*status);
+        copy(newNode, name, brand, model, ip, mac, location, maintenanceDate, type, status);
 
         newNode->next = inventoryList;
         inventoryList = newNode;
@@ -194,7 +187,7 @@ void saveItem(char name[50], char brand[50], char model[50], char ip[16], char m
     }
 }
 
-void showModal(char itemName[50], char itemBrand[50], char itemModel[50], char itemIp[16], char itemMac[18], char itemLocation[100], char itemLastMaintenanceDate[11], int *activeType, int *activeStatus)
+static void showModal(char itemName[50], char itemBrand[50], char itemModel[50], char itemIp[16], char itemMac[18], char itemLocation[100], char itemLastMaintenanceDate[11], int *activeType, int *activeStatus)
 {
     Rectangle dialogBounds = {GetScreenWidth() / 4, GetScreenHeight() / 4, GetScreenWidth() / 2, GetScreenHeight() / 2};
     Rectangle contentDialog = {0, 0, dialogBounds.width - 20, dialogBounds.height < 355 ? 500 : dialogBounds.height - 32};
@@ -316,22 +309,22 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
     {
         showAddItemDialog = !showAddItemDialog;
     }
-    GuiDrawIcon(UploadIconId, UploadIconRect.x, UploadIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
-    if (CheckCollisionPointRec(GetMousePosition(), UploadIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    if (drawIconWcollisions(UploadIconId, iconScale == 1 ? 1 : 2, UploadIconRect))
     {
         loadInventoryFromFile("incidentes.dat");
     }
-    GuiDrawIcon(DownloadIconId, DownloadIconRect.x, DownloadIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
-    if (CheckCollisionPointRec(GetMousePosition(), DownloadIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    if (drawIconWcollisions(DownloadIconId, iconScale == 1 ? 1 : 2, DownloadIconRect))
     {
         saveInventoryToFile("incidentes.dat");
     }
+
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
     float searchLenght = MeasureText("Pesquisar...", fontSize > 22 ? 22 : fontSize);
     float typeLenght = MeasureText("ACCESS_POINT", fontSize > 22 ? 22 : fontSize);
     float statusLenght = MeasureText("OPERACIONAL", fontSize > 22 ? 22 : fontSize);
     bool isNotBullied = (bounds.width - typeLenght - statusLenght - 10) > searchLenght;
     float searchBullyDefender = isNotBullied ? bounds.width - typeLenght - statusLenght - 10 : 0.34 * bounds.width - 10;
+
     Rectangle searchBounds = {bounds.x, bounds.y - fontSizeForButtons - 5, searchBullyDefender, fontSizeForButtons};
     Rectangle typeBounds = {searchBounds.x + searchBounds.width + 5, searchBounds.y, isNotBullied ? typeLenght : 0.33 * bounds.width, fontSizeForButtons};
     Rectangle statusBounds = {typeBounds.x + typeBounds.width + 5, searchBounds.y, isNotBullied ? statusLenght : 0.33 * bounds.width, fontSizeForButtons};

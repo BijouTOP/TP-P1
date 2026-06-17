@@ -28,3 +28,12 @@ void drawTextBoxWithPlaceholder(Rectangle bounds, char *text, int textSize, bool
         *editMode = !(*editMode);
     }
 }
+bool drawIconWcollisions(int id, int size, Rectangle collision)
+{
+    GuiDrawIcon(id, collision.x, collision.y, size, BLACK);
+    if (CheckCollisionPointRec(GetMousePosition(), collision) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        return true;
+    }
+    return false;
+}

@@ -176,7 +176,7 @@ int main()
         case 3:
             break;
         case 4:
-            drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
+            // drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
         case 5:
             break;

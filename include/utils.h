@@ -10,3 +10,4 @@
 
 int closeWindow();
 void drawTextBoxWithPlaceholder(Rectangle bounds, char *text, int textSize, bool *editMode, const char *placeholder);
+bool drawIconWcollisions(int id, int size, Rectangle collision);
