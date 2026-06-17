@@ -1,4 +1,4 @@
-// Falta fazer verificaçoes modal / pequeno bug dropdown can hover modificar / ordenar when loading from file / DELETE INCIDENTES TECNICOS
+// Falta fazer verificaçoes modal / pequeno bug dropdown can hover modificar / ordenar when loading from file /id when loading from file repeated / DELETE INCIDENTES TECNICOS
 
 #include "inventory.h"
 
@@ -18,58 +18,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum
-{
-    ROUTER,
-    SWITCH,
-    ACCESS_POINT,
-    SERVER,
-    NAS,
-    IMPRESSORA,
-    CAMARA,
-    SENSOR,
-    UPS
-} EquipmentType;
-typedef enum
-{
-    OPERACIONAL,
-    MANUTENCAO,
-    FALHA,
-    DESATIVADO
-} EquipmentStatus;
-
-typedef struct InventoryItem
-{
-    int internalCode;
-    char name[50];
-    EquipmentType type;
-    char brand[50];
-    char model[50];
-    char ipAddress[16];
-    char macAddress[18];
-    char location[100];
-    EquipmentStatus status;
-    char lastMaintenanceDate[11];
-} InventoryItem;
-typedef struct Node
-{
-    InventoryItem item;
-    struct Node *next;
-} Node;
 int nextInternalCode = 1;
-char itemName[50] = "";
-char itemBrand[50] = "";
-char itemModel[50] = "";
-char itemIp[16] = "";
-char itemMac[18] = "";
-char itemLocation[100] = "";
-char itemLastMaintenanceDate[11] = "";
+
+DropdownVar newDrop;
+DropdownVar modDrop;
+
+const InventoryItem emptyState = {
+    .internalCode = 1,
+    .name = "",
+    .type = 0,
+    .brand = "",
+    .model = "",
+    .ipAddress = "",
+    .macAddress = "",
+    .location = "",
+    .status = 0,
+    .lastMaintenanceDate = ""};
+
+InventoryItem newItem;
+InventoryItem modifiableItem;
 
 bool editModes[9] = {false};
-int activeType = {0};
-int activeStatus = {0};
-int MactiveType = {0};
-int MactiveStatus = {0};
 
 bool showAddItemDialog = false;
 Node *inventoryList = NULL;
@@ -140,24 +109,26 @@ static void loadInventoryFromFile(const char *filename)
 
     fclose(file);
 }
-static void copy(Node *node, char name[50], char brand[50], char model[50], char ip[16], char mac[18], char location[100], char maintenanceDate[11], int *type, int *status)
+static void copy(Node *node, InventoryItem *item)
 {
-    strncpy(node->item.name, name, 50);
-    strncpy(node->item.brand, brand, 50);
-    strncpy(node->item.model, model, 50);
-    strncpy(node->item.ipAddress, ip, 16);
-    strncpy(node->item.macAddress, mac, 18);
-    strncpy(node->item.location, location, 100);
-    strncpy(node->item.lastMaintenanceDate, maintenanceDate, 11);
+    strncpy(node->item.name, item->name, 50);
+    strncpy(node->item.brand, item->brand, 50);
+    strncpy(node->item.model, item->model, 50);
+    strncpy(node->item.ipAddress, item->ipAddress, 16);
+    strncpy(node->item.macAddress, item->macAddress, 18);
+    strncpy(node->item.location, item->location, 100);
+    strncpy(node->item.lastMaintenanceDate, item->lastMaintenanceDate, 11);
 
-    node->item.type = (EquipmentType)(*type);
-    node->item.status = (EquipmentStatus)(*status);
+    node->item.type = item->type;
+    node->item.status = item->status;
 }
-static void saveItem(char name[50], char brand[50], char model[50], char ip[16], char mac[18], char location[100], char maintenanceDate[11], int *type, int *status)
+static void saveItem(InventoryItem *item, DropdownVar *drop)
 {
+    item->type = (EquipmentType)drop->type;
+    item->status = (EquipmentStatus)drop->status;
     if (isEditing && nodeBeingEdited != NULL)
     {
-        copy(nodeBeingEdited, name, brand, model, ip, mac, location, maintenanceDate, type, status);
+        copy(nodeBeingEdited, item);
         isEditing = false;
         nodeBeingEdited = NULL;
     }
@@ -167,27 +138,21 @@ static void saveItem(char name[50], char brand[50], char model[50], char ip[16],
 
         newNode->item.internalCode = nextInternalCode++;
 
-        copy(newNode, name, brand, model, ip, mac, location, maintenanceDate, type, status);
+        copy(newNode, item);
 
         newNode->next = inventoryList;
         inventoryList = newNode;
 
         showAddItemDialog = false;
 
-        itemName[0] = '\0';
-        itemBrand[0] = '\0';
-        itemModel[0] = '\0';
-        itemIp[0] = '\0';
-        itemMac[0] = '\0';
-        itemLocation[0] = '\0';
-        itemLastMaintenanceDate[0] = '\0';
+        *item = emptyState;
 
-        activeType = 0;
-        activeStatus = 0;
+        // drop->type = 0;
+        // drop->status = 0;
     }
 }
 
-static void showModal(char itemName[50], char itemBrand[50], char itemModel[50], char itemIp[16], char itemMac[18], char itemLocation[100], char itemLastMaintenanceDate[11], int *activeType, int *activeStatus)
+static void showModal(InventoryItem *item, DropdownVar *drop)
 {
     Rectangle dialogBounds = {GetScreenWidth() / 4, GetScreenHeight() / 4, GetScreenWidth() / 2, GetScreenHeight() / 2};
     Rectangle contentDialog = {0, 0, dialogBounds.width - 20, dialogBounds.height < 355 ? 500 : dialogBounds.height - 32};
@@ -204,10 +169,10 @@ static void showModal(char itemName[50], char itemBrand[50], char itemModel[50],
         switch (i)
         {
         case 0:
-            drawTextBoxWithPlaceholder(textBoxBounds, itemName, 50, &editModes[0], placeholders[0]);
+            drawTextBoxWithPlaceholder(textBoxBounds, item->name, 50, &editModes[0], placeholders[0]);
             break;
         case 1:
-            drawTextBoxWithPlaceholder(textBoxBounds, itemBrand, 50, &editModes[1], placeholders[1]);
+            drawTextBoxWithPlaceholder(textBoxBounds, item->brand, 50, &editModes[1], placeholders[1]);
             break;
         case 2:
             break;
@@ -216,28 +181,28 @@ static void showModal(char itemName[50], char itemBrand[50], char itemModel[50],
             {
                 break;
             }
-            drawTextBoxWithPlaceholder(textBoxBounds, itemModel, 50, &editModes[3], placeholders[2]);
+            drawTextBoxWithPlaceholder(textBoxBounds, item->model, 50, &editModes[3], placeholders[2]);
             break;
         case 4:
             if (editModes[2])
             {
                 break;
             }
-            drawTextBoxWithPlaceholder(textBoxBounds, itemIp, 16, &editModes[4], placeholders[3]);
+            drawTextBoxWithPlaceholder(textBoxBounds, item->ipAddress, 16, &editModes[4], placeholders[3]);
             break;
         case 5:
             if (editModes[2])
             {
                 break;
             }
-            drawTextBoxWithPlaceholder(textBoxBounds, itemMac, 18, &editModes[5], placeholders[4]);
+            drawTextBoxWithPlaceholder(textBoxBounds, item->macAddress, 18, &editModes[5], placeholders[4]);
             break;
         case 6:
             if (editModes[2])
             {
                 break;
             }
-            drawTextBoxWithPlaceholder(textBoxBounds, itemLocation, 100, &editModes[6], placeholders[5]);
+            drawTextBoxWithPlaceholder(textBoxBounds, item->location, 100, &editModes[6], placeholders[5]);
             break;
         case 7:
             break;
@@ -246,7 +211,7 @@ static void showModal(char itemName[50], char itemBrand[50], char itemModel[50],
             {
                 break;
             }
-            drawTextBoxWithPlaceholder(textBoxBounds, itemLastMaintenanceDate, 11, &editModes[8], placeholders[6]);
+            drawTextBoxWithPlaceholder(textBoxBounds, item->lastMaintenanceDate, 11, &editModes[8], placeholders[6]);
             break;
         case 9:
             if (editModes[2] || editModes[7])
@@ -255,7 +220,7 @@ static void showModal(char itemName[50], char itemBrand[50], char itemModel[50],
             }
             if (GuiLabelButton(textBoxBounds, isEditing ? "Modificar Item" : "Adicionar Item"))
             {
-                saveItem(itemName, itemBrand, itemModel, itemIp, itemMac, itemLocation, itemLastMaintenanceDate, activeType, activeStatus);
+                saveItem(item, drop);
             }
             break;
         }
@@ -265,7 +230,7 @@ static void showModal(char itemName[50], char itemBrand[50], char itemModel[50],
         EndScissorMode();
     }
     Rectangle dropdownTypeBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (2 * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
-    if (GuiDropdownBox(dropdownTypeBounds, "Router;Switch;Access Point;Server;NAS;Printer;Camera;Sensor;UPS", activeType, editModes[2]))
+    if (GuiDropdownBox(dropdownTypeBounds, "Router;Switch;Access Point;Server;NAS;Printer;Camera;Sensor;UPS", &drop->type, editModes[2]))
     {
         editModes[2] = !editModes[2];
     }
@@ -276,7 +241,7 @@ static void showModal(char itemName[50], char itemBrand[50], char itemModel[50],
     Rectangle dropdownStatusBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (7 * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
     if (!editModes[2])
     {
-        if (GuiDropdownBox(dropdownStatusBounds, "Operacional;Em Manutenção; Em Falha; Desativado", activeStatus, editModes[7]))
+        if (GuiDropdownBox(dropdownStatusBounds, "Operacional;Em Manutenção; Em Falha; Desativado", &drop->status, editModes[7]))
         {
             editModes[7] = !editModes[7];
         }
@@ -303,6 +268,9 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
     }
     else if (!showAddItemDialog)
     {
+        newDrop.type = 0;
+        newDrop.status = 0;
+
         GuiDrawIcon(AddIconId, AddIconRect.x, AddIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
     }
     if (CheckCollisionPointRec(GetMousePosition(), AddIconRect) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !isEditing)
@@ -334,6 +302,7 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
     drawTextBoxWithPlaceholder(searchBounds, searchText, 50, &searchEdit, "Pesquisar...");
 
     Node *current = inventoryList;
+
     GuiScrollPanel(bounds, "Inventario", content, &scrollItems, &viewItems);
     BeginScissorMode(bounds.x, bounds.y, bounds.width, bounds.height);
 
@@ -372,9 +341,10 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
         {
             isEditing = true;
             nodeBeingEdited = current;
+            modifiableItem = current->item;
 
-            MactiveType = current->item.type;
-            MactiveStatus = current->item.status;
+            modDrop.type = (int)current->item.type;
+            modDrop.status = (int)current->item.status;
         }
 
         if (GuiButton(deleteButtonBounds, "Deletar") && !showAddItemDialog && !filterStatusEdit && !filterTypeEdit)
@@ -411,10 +381,11 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
 
     if (showAddItemDialog && !isEditing)
     {
-        showModal(itemName, itemBrand, itemModel, itemIp, itemMac, itemLocation, itemLastMaintenanceDate, &activeType, &activeStatus);
+
+        showModal(&newItem, &newDrop);
     }
     if (!showAddItemDialog && isEditing)
     {
-        showModal(nodeBeingEdited->item.name, nodeBeingEdited->item.brand, nodeBeingEdited->item.model, nodeBeingEdited->item.ipAddress, nodeBeingEdited->item.macAddress, nodeBeingEdited->item.location, nodeBeingEdited->item.lastMaintenanceDate, &MactiveType, &MactiveStatus);
+        showModal(&modifiableItem, &modDrop);
     }
 }
