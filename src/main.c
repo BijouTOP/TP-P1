@@ -81,9 +81,6 @@ int main()
             guiIcons[MINUS_ICON_ID * 8 + i] = MinusIcon[i];
         }
 
-        // Define icons rectangles
-
-        // Using GetScreenHeight() / 200.0f because it is the scale factor for icons.
         const int iconScale = GetScreenHeight() < GetScreenWidth() ? GetScreenHeight() / 200 : GetScreenWidth() / 200;
         const float iconSize = 16 * iconScale;
         const float paddingAccountingForIcon = 32 * iconScale;
@@ -104,25 +101,15 @@ int main()
         ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
         // Draw icons and check for mouse interaction
-        GuiDrawIcon(FULLSCREEN_ICON_ID, FullscreenIcon.x, FullscreenIcon.y, iconScale, BLACK);
-        if (CheckCollisionPointRec(GetMousePosition(), FullscreenIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        if (drawIconWcollisions(FULLSCREEN_ICON_ID, iconScale, FullscreenIcon))
         {
             ToggleFullscreen();
         }
-        GuiDrawIcon(EXIT_ICON_ID, ExitIcon.x, ExitIcon.y, iconScale, BLACK);
-        if (CheckCollisionPointRec(GetMousePosition(), ExitIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        if (drawIconWcollisions(EXIT_ICON_ID, iconScale, ExitIcon))
         {
             return closeWindow();
         }
-        if (MusicState == 0)
-        {
-            GuiDrawIcon(AUDIO_MUTED_ICON_ID, MusicIcon.x, MusicIcon.y, iconScale, BLACK);
-        }
-        else
-        {
-            GuiDrawIcon(AUDIO_UNMUTED_ICON_ID, MusicIcon.x, MusicIcon.y, iconScale, BLACK);
-        }
-        if (CheckCollisionPointRec(GetMousePosition(), MusicIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        if (drawIconWcollisions(MusicState == 0 ? AUDIO_MUTED_ICON_ID : AUDIO_UNMUTED_ICON_ID, iconScale, MusicIcon))
         {
             if (MusicState == 0)
             {
@@ -135,11 +122,11 @@ int main()
                 MusicState = 0;
             }
         }
-        GuiDrawIcon(HOME_ICON_ID, HomeIcon.x, HomeIcon.y, iconScale, BLACK);
-        if (CheckCollisionPointRec(GetMousePosition(), HomeIcon) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        if (drawIconWcollisions(HOME_ICON_ID, iconScale, HomeIcon))
         {
             menu = 0;
         }
+
         // To reset call same function with default value (10)
         float fontSize = 0.05 * GetScreenHeight();
 
@@ -175,7 +162,7 @@ int main()
         case 3:
             break;
         case 4:
-            // drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
+            drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
         case 5:
             break;

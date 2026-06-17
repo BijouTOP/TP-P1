@@ -35,76 +35,113 @@ const InventoryItem emptyState = {
     .status = 0,
     .lastMaintenanceDate = ""};
 
-InventoryItem newItem;
-InventoryItem modifiableItem;
+static InventoryItem newItem;
+static InventoryItem modifiableItem;
 
-bool editModes[9] = {false};
+static bool editModes[9] = {false};
 
-bool showAddItemDialog = false;
-Node *inventoryList = NULL;
+static bool showAddItemDialog = false;
+static Node *inventoryList = NULL;
 
-Vector2 scrollItems = {0, 0};
-Rectangle viewItems = {0};
+static ScrollVars itemsScroll = {
+    .scroll = {0, 0},
+    .view = {0}};
 
-Vector2 scrollDialog = {0, 0};
-Rectangle viewDialog = {0};
+static ScrollVars dialogScroll = {
+    .scroll = {0, 0},
+    .view = {0}};
 
-bool isEditing = false;
-Node *nodeBeingEdited = NULL;
+static bool isEditing = false;
+static Node *nodeBeingEdited = NULL;
 
-char searchText[50] = "";
-bool searchEdit = false;
+static char searchText[50] = "";
+static bool searchEdit = false;
 
-int filterType = 0;
-bool filterTypeEdit = false;
+static int filterType = 0;
+static bool filterTypeEdit = false;
 
-int filterStatus = 0;
-bool filterStatusEdit = false;
+static int filterStatus = 0;
+static bool filterStatusEdit = false;
 
+static void clearInventory()
+{
+    Node *current = inventoryList;
+    while (current != NULL)
+    {
+        Node *next = current->next;
+        free(current);
+        current = next;
+    }
+    inventoryList = NULL;
+}
 static void saveInventoryToFile(const char *filename)
 {
     FILE *file = fopen(filename, "wb");
-
     if (file == NULL)
         return;
 
-    Node *current = inventoryList;
-
-    while (current != NULL)
+    int count = 0;
+    Node *curr = inventoryList;
+    while (curr)
     {
-        fwrite(&current->item, sizeof(InventoryItem), 1, file);
-        current = current->next;
+        count++;
+        curr = curr->next;
     }
 
+    InventoryItem *items = malloc(sizeof(InventoryItem) * count);
+    curr = inventoryList;
+    for (int i = count - 1; i >= 0; i--)
+    { // Fill backwards
+        items[i] = curr->item;
+        curr = curr->next;
+    }
+
+    fwrite(items, sizeof(InventoryItem), count, file);
+
+    free(items);
     fclose(file);
 }
 
 static void loadInventoryFromFile(const char *filename)
 {
     FILE *file = fopen(filename, "rb");
-
     if (file == NULL)
         return;
 
-    // clearInventory();
+    clearInventory();
+    nextInternalCode = 1;
 
     InventoryItem tempItem;
 
     while (fread(&tempItem, sizeof(InventoryItem), 1, file) == 1)
     {
-        Node *newNode = malloc(sizeof(Node));
+        bool exists = false;
+        Node *current = inventoryList;
+        while (current != NULL)
+        {
+            if (current->item.internalCode == tempItem.internalCode)
+            {
+                exists = true;
+                break;
+            }
+            current = current->next;
+        }
 
-        if (newNode == NULL)
-            break;
+        if (!exists)
+        {
+            Node *newNode = malloc(sizeof(Node));
+            if (newNode == NULL)
+                break;
 
-        newNode->item = tempItem;
-        newNode->next = inventoryList;
-        inventoryList = newNode;
-    }
+            newNode->item = tempItem;
+            newNode->next = inventoryList;
+            inventoryList = newNode;
 
-    if (tempItem.internalCode >= nextInternalCode)
-    {
-        nextInternalCode = tempItem.internalCode + 1;
+            if (tempItem.internalCode >= nextInternalCode)
+            {
+                nextInternalCode = tempItem.internalCode + 1;
+            }
+        }
     }
 
     fclose(file);
@@ -156,7 +193,7 @@ static void showModal(InventoryItem *item, DropdownVar *drop)
 {
     Rectangle dialogBounds = {GetScreenWidth() / 4, GetScreenHeight() / 4, GetScreenWidth() / 2, GetScreenHeight() / 2};
     Rectangle contentDialog = {0, 0, dialogBounds.width - 20, dialogBounds.height < 355 ? 500 : dialogBounds.height - 32};
-    GuiScrollPanel(dialogBounds, isEditing ? "Modificar Item" : "Adicionar Item", contentDialog, &scrollDialog, &viewDialog);
+    GuiScrollPanel(dialogBounds, isEditing ? "Modificar Item" : "Adicionar Item", contentDialog, &dialogScroll.scroll, &dialogScroll.view);
 
     BeginScissorMode(dialogBounds.x, dialogBounds.y + 24, dialogBounds.width, dialogBounds.height - 32);
 
@@ -164,7 +201,7 @@ static void showModal(InventoryItem *item, DropdownVar *drop)
 
     for (int i = 0; i < 10; i++)
     {
-        Rectangle textBoxBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (i * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
+        Rectangle textBoxBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (i * 45) + dialogScroll.scroll.y, dialogBounds.width - 60, 35};
 
         switch (i)
         {
@@ -229,7 +266,7 @@ static void showModal(InventoryItem *item, DropdownVar *drop)
     {
         EndScissorMode();
     }
-    Rectangle dropdownTypeBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (2 * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
+    Rectangle dropdownTypeBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (2 * 45) + dialogScroll.scroll.y, dialogBounds.width - 60, 35};
     if (GuiDropdownBox(dropdownTypeBounds, "Router;Switch;Access Point;Server;NAS;Printer;Camera;Sensor;UPS", &drop->type, editModes[2]))
     {
         editModes[2] = !editModes[2];
@@ -238,7 +275,7 @@ static void showModal(InventoryItem *item, DropdownVar *drop)
     {
         EndScissorMode();
     }
-    Rectangle dropdownStatusBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (7 * 45) + scrollDialog.y, dialogBounds.width - 60, 35};
+    Rectangle dropdownStatusBounds = {dialogBounds.x + 20, dialogBounds.y + 40 + (7 * 45) + dialogScroll.scroll.y, dialogBounds.width - 60, 35};
     if (!editModes[2])
     {
         if (GuiDropdownBox(dropdownStatusBounds, "Operacional;Em Manutenção; Em Falha; Desativado", &drop->status, editModes[7]))
@@ -253,14 +290,8 @@ static void showModal(InventoryItem *item, DropdownVar *drop)
 }
 void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds)
 {
-    if (fontSize > 22)
-    {
-        GuiSetStyle(DEFAULT, TEXT_SIZE, 22);
-    }
-    else
-    {
-        GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
-    }
+
+    GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize > 22 ? 22 : fontSize);
 
     if (showAddItemDialog && !isEditing)
     {
@@ -303,8 +334,9 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
 
     Node *current = inventoryList;
 
-    GuiScrollPanel(bounds, "Inventario", content, &scrollItems, &viewItems);
-    BeginScissorMode(bounds.x, bounds.y, bounds.width, bounds.height);
+    GuiScrollPanel(bounds, "Inventario", content, &itemsScroll.scroll, &itemsScroll.view);
+    // panel title 24
+    BeginScissorMode(bounds.x, bounds.y + 24, bounds.width, bounds.height - 24);
 
     float modificarLenght = MeasureText("Modificar", fontSize > 22 ? 22 : fontSize);
     float deletarLenght = MeasureText("Deletar", fontSize > 22 ? 22 : fontSize);
@@ -324,7 +356,7 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
         }
 
         GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-        Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + scrollItems.y, bounds.width - 70 - modificarLenght - deletarLenght, fontSizeForButtons};
+        Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + itemsScroll.scroll.y, bounds.width - 70 - modificarLenght - deletarLenght, fontSizeForButtons};
         Rectangle deleteButtonBounds = {bounds.x + bounds.width - 30 - deletarLenght, itemBounds.y, deletarLenght + 10, fontSizeForButtons};
         Rectangle modifyButtonBounds = {bounds.x + bounds.width - 50 - modificarLenght - deletarLenght, itemBounds.y, modificarLenght + 10, fontSizeForButtons};
 
