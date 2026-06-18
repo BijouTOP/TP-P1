@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "inventory.h"
 #include "incidentes.h"
+#include "sensores.h"
 
 #include "raylib.h"
 
@@ -160,6 +161,7 @@ int main()
         case 2:
             break;
         case 3:
+            drawSensors(fontSize, bounds);
             break;
         case 4:
             drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);

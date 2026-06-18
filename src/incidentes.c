@@ -146,8 +146,8 @@ static void copy(IncidentNode *node, Incident *item)
     strncpy(node->incident.type, item->type, 50);
     strncpy(node->incident.description, item->description, 50);
     strncpy(node->incident.technician, item->technician, 50);
-    strncpy(node->incident.createdAt, item->createdAt, 30);
-    strncpy(node->incident.concludedAt, item->concludedAt, 30);
+    strncpy(node->incident.createdAt, item->createdAt, 17);
+    strncpy(node->incident.concludedAt, item->concludedAt, 17);
 
     node->incident.status = item->status;
     node->incident.priority = item->priority;
@@ -159,11 +159,11 @@ static void saveItem(Incident *item, DropdownVarIncidentes *drop)
 
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    snprintf(item->createdAt, sizeof(item->createdAt),
-             "%02d-%02d-%04d %02d:%02d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min);
+
+    strftime(item->createdAt, sizeof(item->createdAt), "%d-%m-%Y %H:%M", &tm);
 
     if (item->status == INCIDENTE_CONCLUIDO)
-        strncpy(item->concludedAt, item->createdAt, 30);
+        strncpy(item->concludedAt, item->createdAt, 17);
     else
         item->concludedAt[0] = '\0';
 
@@ -388,9 +388,7 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
             time_t t = time(NULL);
             struct tm tm = *localtime(&t);
 
-            snprintf(current->incident.concludedAt, sizeof(current->incident.concludedAt),
-                     "%02d-%02d-%04d %02d:%02d",
-                     tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900, tm.tm_hour, tm.tm_min);
+            strftime(current->incident.concludedAt, sizeof(current->incident.concludedAt), "%d-%m-%Y %H:%M", &tm);
         }
 
         current = current->next;

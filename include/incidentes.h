@@ -31,8 +31,8 @@ typedef struct Incident
 
     IncidentPriority priority;
 
-    char createdAt[60];
-    char concludedAt[60];
+    char createdAt[17];
+    char concludedAt[17];
 
     char technician[50];
 
