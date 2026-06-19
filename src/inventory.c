@@ -196,7 +196,7 @@ void saveInventoryToFile(const char *filename)
     InventoryItem *items = malloc(sizeof(InventoryItem) * count);
     curr = inventoryList;
     for (int i = count - 1; i >= 0; i--)
-    { // Fill backwards
+    { 
         items[i] = curr->item;
         curr = curr->next;
     }
@@ -348,7 +348,7 @@ void saveItem(InventoryItem *item, DropdownVar *drop)
 static void showModal(InventoryItem *item, DropdownVar *drop)
 {
     Rectangle dialogBounds = {GetScreenWidth() / 4, GetScreenHeight() / 4, GetScreenWidth() / 2, GetScreenHeight() / 2};
-    Rectangle contentDialog = {0, 0, dialogBounds.width - 20, dialogBounds.height < 355 ? 500 : dialogBounds.height - 32};
+    Rectangle contentDialog = {0, 0, dialogBounds.width - 20, dialogBounds.height < 400 ? 800 : dialogBounds.height - 32};
     GuiScrollPanel(dialogBounds, isEditing ? "Modificar Item" : "Adicionar Item", contentDialog, &dialogScroll.scroll, &dialogScroll.view);
 
     BeginScissorMode(dialogBounds.x, dialogBounds.y + 24, dialogBounds.width, dialogBounds.height - 32);
