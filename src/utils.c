@@ -37,3 +37,20 @@ bool drawIconWcollisions(int id, int size, Rectangle collision)
     }
     return false;
 }
+void drawDisabledButton(Rectangle ButtonBounds, char *text)
+{
+    {
+        Color baseColor = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_DISABLED));
+        Color textColor = GetColor(GuiGetStyle(BUTTON, TEXT_COLOR_DISABLED));
+        Color borderColor = GetColor(GuiGetStyle(BUTTON, BORDER_COLOR_DISABLED));
+        int borderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
+
+        DrawRectangleRec(ButtonBounds, baseColor);
+        DrawRectangleLinesEx(ButtonBounds, borderWidth, borderColor);
+        DrawText(text,
+                 ButtonBounds.x + (ButtonBounds.width - MeasureText(text, GuiGetStyle(DEFAULT, TEXT_SIZE))) / 2,
+                 ButtonBounds.y + (ButtonBounds.height - GuiGetStyle(DEFAULT, TEXT_SIZE)) / 2,
+                 GuiGetStyle(DEFAULT, TEXT_SIZE),
+                 textColor);
+    }
+}

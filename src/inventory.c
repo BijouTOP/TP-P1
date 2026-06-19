@@ -1,6 +1,8 @@
-// Falta fazer verificaçoes modal / pequeno bug dropdown can hover modificar / ordenar when loading from file /id when loading from file repeated / DELETE INCIDENTES TECNICOS
+// Falta fazer verificaçoes modal / pequeno bug dropdown can hover modificar / REFACTORAR CODE 😭
 
 #include "inventory.h"
+#include "utils.h"
+#include "incidentes.h"
 
 #include "raylib.h"
 
@@ -11,8 +13,6 @@
 #include "raygui.h"
 
 #pragma GCC diagnostic pop
-
-#include "utils.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -64,6 +64,22 @@ static bool filterTypeEdit = false;
 static int filterStatus = 0;
 static bool filterStatusEdit = false;
 
+void linkIncidenteEquipamento(int equipmentId)
+{
+
+    Node *current = inventoryList;
+
+    while (current != NULL)
+    {
+        if (current->item.internalCode == equipmentId)
+        {
+            current->item.incidents = false;
+            current->item.status = OPERACIONAL;
+            break;
+        }
+        current = current->next;
+    }
+}
 static bool analisarResultadoPing(const char *filename)
 {
     FILE *file = fopen(filename, "r");
@@ -86,7 +102,7 @@ static bool analisarResultadoPing(const char *filename)
     return respondeu;
 }
 
-static void executarPingItem(Node *node)
+static void exePingItem(Node *node)
 {
     if (node == NULL || strlen(node->item.ipAddress) == 0)
         return;
@@ -112,8 +128,9 @@ static void executarPingItem(Node *node)
     if (!respondeu)
     {
         node->item.status = 2;
+        node->item.incidents = true;
 
-        // Funcao incidentes por criar
+        autoIncidentinventory(node->item.name, node->item.internalCode);
     }
 
     FILE *logFile = fopen("data/log_monitorizacao.txt", "a");
@@ -128,7 +145,23 @@ static void executarPingItem(Node *node)
         fclose(logFile);
     }
 }
+void exePingGeral()
+{
+    if (inventoryList == NULL)
+    {
+        return;
+    }
 
+    Node *current = inventoryList;
+
+    while (current != NULL)
+    {
+
+        exePingItem(current);
+
+        current = current->next; // Avança para o próximo equipamento
+    }
+}
 static void clearInventory()
 {
     Node *current = inventoryList;
@@ -249,9 +282,6 @@ static void saveItem(InventoryItem *item, DropdownVar *drop)
         showAddItemDialog = false;
 
         *item = emptyState;
-
-        // drop->type = 0;
-        // drop->status = 0;
     }
 }
 
@@ -384,6 +414,7 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
     }
     if (drawIconWcollisions(PingNetworkIconId, iconScale == 1 ? 1 : 2, PingNetworkRect))
     {
+        exePingGeral();
     }
 
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
@@ -440,7 +471,7 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
         GuiLabel(itemBounds, displayText);
         if (GuiButton(pingButtonBounds, TextFormat("#%d#", PingIconId)))
         {
-            executarPingItem(current);
+            exePingItem(current);
         }
 
         if (GuiButton(modifyButtonBounds, "Modificar") && !showAddItemDialog && !filterStatusEdit && !filterTypeEdit)
@@ -452,8 +483,11 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
             modDrop.type = (int)current->item.type;
             modDrop.status = (int)current->item.status;
         }
-
-        if (GuiButton(deleteButtonBounds, "Deletar") && !showAddItemDialog && !filterStatusEdit && !filterTypeEdit)
+        if (current->item.incidents == true)
+        {
+            drawDisabledButton(deleteButtonBounds, "Deletar");
+        }
+        else if (GuiButton(deleteButtonBounds, "Deletar") && !showAddItemDialog && !filterStatusEdit && !filterTypeEdit)
         {
             Node *temp = inventoryList;
             Node *prev = NULL;

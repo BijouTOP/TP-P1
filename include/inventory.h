@@ -40,6 +40,7 @@ typedef struct InventoryItem
     char location[100];
     EquipmentStatus status;
     char lastMaintenanceDate[11];
+    bool incidents;
 } InventoryItem;
 typedef struct Node
 {
@@ -53,3 +54,4 @@ typedef struct DropdownVar
 } DropdownVar;
 
 void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, int PingiconId, int PingNetworkIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle PingNetworkRect, Rectangle bounds);
+void linkIncidenteEquipamento(int equipmentId);

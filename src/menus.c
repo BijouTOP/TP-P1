@@ -18,8 +18,8 @@ int drawMainMenu(float fontSize)
     GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
     GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
-    const char *menuLabels[7] = {"Inventário de Equipamentos da Rede", "Testes de Conectividade", "Monitorização de Sensores", "Incidentes Técnicos", "Registo de Configurações", "Relatórios Técnicos"};
-    for (int i = 0; i < 7; i++)
+    const char *menuLabels[5] = {"Inventário de Equipamentos da Rede", "Monitorização de Sensores", "Incidentes Técnicos", "Registo de Configurações", "Relatórios Técnicos"};
+    for (int i = 0; i < 5; i++)
     {
         // GuiLabel((Rectangle){containerBounds.x, containerBounds.y + (i * spacing), containerBounds.width, 24}, menuLabels[i]);
         if (GuiLabelButton((Rectangle){GetScreenWidth() / 2 - ((MeasureText(menuLabels[i], fontSize)) / 2.0f), containerPadding * GetScreenHeight() + (i * spacing), MeasureText(menuLabels[i], (int)fontSize), fontSize}, menuLabels[i]))
@@ -40,9 +40,6 @@ int drawMainMenu(float fontSize)
                 break;
             case 4:
                 return 5;
-                break;
-            case 5:
-                return 6;
                 break;
             default:
                 return 0;

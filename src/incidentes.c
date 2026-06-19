@@ -2,6 +2,7 @@
 
 #include "incidentes.h"
 #include "utils.h"
+#include "inventory.h"
 
 #include "raylib.h"
 
@@ -26,6 +27,7 @@ static DropdownVarIncidentes newDrop;
 
 const Incident emptyIncident = {
     .id = 0,
+    .equipmentId = -1,
     .equipmentCode = "",
     .type = "",
     .description = "",
@@ -61,6 +63,45 @@ static bool filterStatusEdit = false;
 
 static int filterPriority = 0;
 static bool filterPriorityEdit = false;
+
+void autoIncidentinventory(char *equipamento, int equipmentId)
+{
+    printf("\nOLA: %d", equipmentId);
+    IncidentNode *newNode = (IncidentNode *)malloc(sizeof(IncidentNode));
+    if (newNode == NULL)
+        return;
+
+    newNode->incident.id = nextInternalCode++;
+    newNode->incident.equipmentId = equipmentId;
+
+    strncpy(newNode->incident.equipmentCode, equipamento, 50);
+    strncpy(newNode->incident.type, "Falha de Rede", 50);
+    strncpy(newNode->incident.description, "Ping não obteve resposta", 50);
+    strncpy(newNode->incident.technician, "Monitorização Ping", 50);
+
+    newNode->incident.priority = PRIORIDADE_MEDIA;
+    newNode->incident.status = INCIDENTE_PENDENTE;
+
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    strftime(newNode->incident.createdAt, sizeof(newNode->incident.createdAt), "%d-%m-%Y %H:%M", &tm);
+
+    newNode->next = NULL;
+
+    if (incidentList == NULL)
+    {
+        incidentList = newNode;
+    }
+    else
+    {
+        IncidentNode *tail = incidentList;
+        while (tail->next != NULL)
+        {
+            tail = tail->next;
+        }
+        tail->next = newNode;
+    }
+}
 
 static void clearIncidentes()
 {
@@ -149,6 +190,7 @@ static void copy(IncidentNode *node, Incident *item)
     strncpy(node->incident.createdAt, item->createdAt, 17);
     strncpy(node->incident.concludedAt, item->concludedAt, 17);
 
+    node->incident.equipmentId = -1;
     node->incident.status = item->status;
     node->incident.priority = item->priority;
 }
@@ -351,16 +393,7 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
             showInfoForId = (showInfoForId == current->incident.id) ? -1 : current->incident.id;
         if (current->incident.status == INCIDENTE_EM_CURSO || current->incident.status == INCIDENTE_CONCLUIDO)
         {
-            Color baseColor = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_DISABLED));
-            Color textColor = GetColor(GuiGetStyle(BUTTON, TEXT_COLOR_DISABLED));
-            Color borderColor = GetColor(GuiGetStyle(BUTTON, BORDER_COLOR_DISABLED));
-            int borderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
-            DrawRectangleRec(processarButtonBounds, baseColor);
-            DrawRectangleLinesEx(processarButtonBounds, borderWidth, borderColor);
-            DrawText("Processar",
-                     processarButtonBounds.x + (processarButtonBounds.width - MeasureText("Processar", GuiGetStyle(DEFAULT, TEXT_SIZE))) / 2,
-                     processarButtonBounds.y + (processarButtonBounds.height - GuiGetStyle(DEFAULT, TEXT_SIZE)) / 2,
-                     GuiGetStyle(DEFAULT, TEXT_SIZE), textColor);
+            drawDisabledButton(processarButtonBounds, "Processar");
         }
         else if (GuiButton(processarButtonBounds, "Processar") && !showAddIncidenteDialog && !filterStatusEdit)
         {
@@ -368,18 +401,7 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
         }
         if (current->incident.status == INCIDENTE_CONCLUIDO)
         {
-            Color baseColor = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_DISABLED));
-            Color textColor = GetColor(GuiGetStyle(BUTTON, TEXT_COLOR_DISABLED));
-            Color borderColor = GetColor(GuiGetStyle(BUTTON, BORDER_COLOR_DISABLED));
-            int borderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
-
-            DrawRectangleRec(concluirButtonBounds, baseColor);
-            DrawRectangleLinesEx(concluirButtonBounds, borderWidth, borderColor);
-            DrawText("Concluir",
-                     concluirButtonBounds.x + (concluirButtonBounds.width - MeasureText("Concluir", GuiGetStyle(DEFAULT, TEXT_SIZE))) / 2,
-                     concluirButtonBounds.y + (concluirButtonBounds.height - GuiGetStyle(DEFAULT, TEXT_SIZE)) / 2,
-                     GuiGetStyle(DEFAULT, TEXT_SIZE),
-                     textColor);
+            drawDisabledButton(concluirButtonBounds, "Concluir");
         }
         else if (GuiButton(concluirButtonBounds, "Concluir") && !showAddIncidenteDialog && !filterStatusEdit)
         {
@@ -389,6 +411,12 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
             struct tm tm = *localtime(&t);
 
             strftime(current->incident.concludedAt, sizeof(current->incident.concludedAt), "%d-%m-%Y %H:%M", &tm);
+            printf("\n%d", current->incident.equipmentId);
+            if (current->incident.equipmentId != -1)
+            {
+                printf("\nola");
+                linkIncidenteEquipamento(current->incident.equipmentId);
+            }
         }
 
         current = current->next;

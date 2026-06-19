@@ -182,19 +182,14 @@ int main()
             drawInventory(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, PING_ICON_ID, PING_NETWORK_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, PingNetworkIconRect, bounds);
             break;
         case 2:
-            break;
-        case 3:
             drawSensors(fontSize, bounds);
             break;
-        case 4:
+        case 3:
             drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, INFO_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
+        case 4:
+            break;
         case 5:
-            break;
-        case 6:
-            break;
-        case 7:
-            return closeWindow();
             break;
         default:
             break;

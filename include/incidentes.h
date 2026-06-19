@@ -24,7 +24,7 @@ typedef enum
 typedef struct Incident
 {
     int id;
-
+    int equipmentId;
     char equipmentCode[50];
     char type[50];
     char description[200];
@@ -51,3 +51,4 @@ typedef struct DropdownVarIncidentes
 } DropdownVarIncidentes;
 
 void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, int InfoIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds);
+void autoIncidentinventory(char *equipamento, int equipmentId);
