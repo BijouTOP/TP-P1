@@ -90,6 +90,13 @@ int main()
     unsigned int AddIcon[8] = {0x01800000, 0x01800180, 0x01800180, 0x7ffe0180, 0x01807ffe, 0x01800180, 0x01800180, 0x00000180};
     unsigned int MinusIcon[8] = {0x00000000, 0x00000000, 0x00000000, 0x7ffe0000, 0x00007ffe, 0x00000000, 0x00000000, 0x00000000};
 
+    TraceLog(LOG_INFO, "A tentar carregar dados dos sensores via API...");
+    if (!importarSensoresAPI())
+    {
+        TraceLog(LOG_WARNING, "API Indisponivel. A carregar backup local...");
+        importarSensoresFicheiro("sensores_rack.txt");
+    }
+
     // Main application loop
     while (!WindowShouldClose())
     {
@@ -137,6 +144,10 @@ int main()
         }
         if (drawIconWcollisions(EXIT_ICON_ID, iconScale, ExitIcon))
         {
+            TraceLog(LOG_INFO, "A guardar dados antes de fechar...");
+            guardarSensoresFicheiro("data/sensores_rack.txt");
+
+            freeSensorsList();
             return closeWindow();
         }
         if (drawIconWcollisions(MusicState == 0 ? AUDIO_MUTED_ICON_ID : AUDIO_UNMUTED_ICON_ID, iconScale, MusicIcon))
@@ -201,6 +212,10 @@ int main()
         EndDrawing();
     }
 
-    // De-Initialization
+    TraceLog(LOG_INFO, "A guardar dados antes de fechar...");
+    guardarSensoresFicheiro("data/sensores_rack.txt");
+
+    freeSensorsList();
+
     return closeWindow();
 }

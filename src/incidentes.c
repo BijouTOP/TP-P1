@@ -71,7 +71,6 @@ static bool filterPriorityEdit = false;
 
 void autoIncidentinventory(char *equipamento, int equipmentId)
 {
-    printf("\nOLA: %d", equipmentId);
     IncidentNode *newNode = (IncidentNode *)malloc(sizeof(IncidentNode));
     if (newNode == NULL)
         return;

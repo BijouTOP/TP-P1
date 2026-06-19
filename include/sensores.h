@@ -28,3 +28,7 @@ typedef struct SensorNode
     struct SensorNode *next;
 } SensorNode;
 void drawSensors(float fontSize, int InfoIconId, Rectangle bounds);
+bool importarSensoresFicheiro(const char *filename);
+bool importarSensoresAPI(void);
+void guardarSensoresFicheiro(const char *filename);
+void freeSensorsList(void);
