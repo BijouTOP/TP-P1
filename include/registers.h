@@ -1,0 +1,27 @@
+#include "raylib.h"
+
+// Disable unused parameter warnings specifically for raygui
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+#include "raygui.h"
+
+#pragma GCC diagnostic pop
+
+typedef struct RegisterItem
+{
+    char equipmentCode[50];
+    char configType[50];
+    char previousValue[50];
+    char newValue[50];
+    char dateTime[17];
+    char technician[50];
+} RegisterItem;
+
+typedef struct RegisterNode
+{
+    RegisterItem registerItem;
+    struct RegisterNode *next;
+} RegisterNode;
+
+void drawRegisters(float fontSize, float iconScale, int UndoIconId, int RedoIconId, int UploadIconId, int DownloadIconId, int InfoIconId, Rectangle UndoIconRect, Rectangle RedoIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds);

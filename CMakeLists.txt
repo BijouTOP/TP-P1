@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
     src/inventory.c
     src/sensores.c
     src/incidentes.c
+    src/registers.c
     src/utils.c
     src/gui.c
 

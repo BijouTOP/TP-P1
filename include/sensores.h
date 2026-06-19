@@ -27,4 +27,4 @@ typedef struct SensorNode
     Sensor sensor;
     struct SensorNode *next;
 } SensorNode;
-void drawSensors(float fontSize, Rectangle bounds);
+void drawSensors(float fontSize, int InfoIconId, Rectangle bounds);

@@ -29,7 +29,7 @@ static bool searchEdit = false;
 static int filterStatus = 0;
 static bool filterStatusEdit = false;
 
-void drawSensors(float fontSize, Rectangle bounds)
+void drawSensors(float fontSize, int InfoIconId, Rectangle bounds)
 {
     GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize > 22 ? 22 : fontSize);
 
@@ -70,7 +70,7 @@ void drawSensors(float fontSize, Rectangle bounds)
         snprintf(displayText, sizeof(displayText), "%s | %s", current->sensor.equipmentCode, current->sensor.type);
         GuiLabel(itemBounds, displayText);
 
-        if (GuiButton(showinfo, "#140#"))
+        if (GuiButton(showinfo, TextFormat("#%d#", InfoIconId)))
         {
             selectedSensorNode = (selectedSensorNode == current) ? NULL : current;
         }

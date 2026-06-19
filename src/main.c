@@ -3,6 +3,7 @@
 #include "inventory.h"
 #include "incidentes.h"
 #include "sensores.h"
+#include "registers.h"
 
 #include "raylib.h"
 
@@ -48,6 +49,8 @@
 #define INFO_ICON_ID 140
 #define PING_ICON_ID 124
 #define PING_NETWORK_ICON_ID 172
+#define UNDO_ICON_ID 72
+#define REDO_ICON_ID 73
 
 #define FRAME_RATE 60
 
@@ -116,6 +119,8 @@ int main()
         Rectangle HomeIcon = {paddingAccountingForIcon / 2, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
 
         Rectangle AddIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
+        Rectangle UndoIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
+        Rectangle RedoIconRect = {UndoIconRect.x + (iconScale == 1 ? 16 : 16 * 2) + 15, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
         Rectangle DownloadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, AddIconRect.y + (iconScale == 1 ? 16 : 16 * 2) + 15, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
         Rectangle UploadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, DownloadIconRect.y + (iconScale == 1 ? 16 : 16 * 2) + 15, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
         Rectangle PingNetworkIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, UploadIconRect.y + (iconScale == 1 ? 16 : 16 * 2) + 15, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
@@ -182,12 +187,13 @@ int main()
             drawInventory(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, PING_ICON_ID, PING_NETWORK_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, PingNetworkIconRect, bounds);
             break;
         case 2:
-            drawSensors(fontSize, bounds);
+            drawSensors(fontSize, INFO_ICON_ID, bounds);
             break;
         case 3:
             drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, INFO_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
         case 4:
+            drawRegisters(fontSize, iconScale, UNDO_ICON_ID, REDO_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, INFO_ICON_ID, UndoIconRect, RedoIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
         case 5:
             break;
