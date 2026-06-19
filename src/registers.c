@@ -1,6 +1,7 @@
 #include "registers.h"
 #include "utils.h"
 #include "incidentes.h"
+#include "inventory.h"
 
 #include "raylib.h"
 
@@ -26,6 +27,7 @@ const RegisterItem emptyRegister = {
     .technician = ""};
 
 static RegisterNode *registerList = NULL;
+static RegisterNode *redoList = NULL;
 static RegisterNode *selectedRegisterNode = NULL;
 
 static ScrollVars itemsScroll = {
@@ -38,7 +40,9 @@ static bool searchEdit = false;
 static int spinnerValue = 0;
 static bool spinnerEdit = false;
 
-static void clearRegisters()
+static void clearRedoList(void);
+
+void clearRegisters()
 {
     RegisterNode *current = registerList;
     while (current != NULL)
@@ -48,7 +52,10 @@ static void clearRegisters()
         current = next;
     }
     registerList = NULL;
+
+    clearRedoList();
 }
+
 static void saveRegistersToFile(const char *filename)
 {
     FILE *file = fopen(filename, "wb");
@@ -66,7 +73,7 @@ static void saveRegistersToFile(const char *filename)
     RegisterItem *items = malloc(sizeof(RegisterItem) * count);
     curr = registerList;
     for (int i = count - 1; i >= 0; i--)
-    { // Fill backwards
+    {
         items[i] = curr->registerItem;
         curr = curr->next;
     }
@@ -89,56 +96,133 @@ static void loadRegistersFromFile(const char *filename)
 
     while (fread(&tempItem, sizeof(RegisterItem), 1, file) == 1)
     {
-        bool exists = false;
-        clearRegisters();
-        if (!exists)
-        {
-            RegisterNode *newNode = malloc(sizeof(RegisterNode));
-            if (newNode == NULL)
-                break;
+        RegisterNode *newNode = malloc(sizeof(RegisterNode));
+        if (newNode == NULL)
+            break;
 
-            newNode->registerItem = tempItem;
-            newNode->next = registerList;
-            registerList = newNode;
-        }
+        newNode->registerItem = tempItem;
+        newNode->next = registerList;
+        registerList = newNode;
     }
 
     fclose(file);
 }
-// static void copy(RegisterNode *node, RegisterItem *log)
-// {
-//     strncpy(node->registerItem.equipmentCode, log->equipmentCode, 50);
-//     strncpy(node->registerItem.configType, log->configType, 50);
-//     strncpy(node->registerItem.previousValue, log->previousValue, 100);
-//     strncpy(node->registerItem.newValue, log->newValue, 100);
-//     strncpy(node->registerItem.dateTime, log->dateTime, 17);
-//     strncpy(node->registerItem.technician, log->technician, 50);
-// }
-// static void saveItem(RegisterItem *item)
-// {
 
-//     RegisterNode *newNode = (RegisterNode *)malloc(sizeof(RegisterNode));
+static void copy(RegisterNode *node, RegisterItem *log)
+{
+    strncpy(node->registerItem.equipmentCode, log->equipmentCode, 50);
+    strncpy(node->registerItem.configType, log->configType, 50);
+    strncpy(node->registerItem.previousValue, log->previousValue, 50);
+    strncpy(node->registerItem.newValue, log->newValue, 50);
+    strncpy(node->registerItem.dateTime, log->dateTime, 17);
+    strncpy(node->registerItem.technician, log->technician, 50);
+}
 
-//     copy(newNode, item);
+static void clearRedoList()
+{
+    RegisterNode *current = redoList;
+    while (current != NULL)
+    {
+        RegisterNode *next = current->next;
+        free(current);
+        current = next;
+    }
+    redoList = NULL;
+}
 
-//     newNode->next = registerList;
-//     registerList = newNode;
+void registerNewConfig(RegisterItem *item)
+{
+    RegisterNode *newNode = (RegisterNode *)malloc(sizeof(RegisterNode));
+    if (newNode == NULL)
+        return;
 
-//     *item = emptyRegister;
-// }
+    copy(newNode, item);
+    newNode->next = registerList;
+    registerList = newNode;
+
+    clearRedoList();
+}
+
+static EquipmentStatus stringToEquipmentStatus(const char *value)
+{
+    if (strcmp(value, "Operacional") == 0)
+        return OPERACIONAL;
+    if (strcmp(value, "Em Manutencao") == 0)
+        return MANUTENCAO;
+    if (strcmp(value, "Em Falha") == 0)
+        return FALHA;
+    return DESATIVADO;
+}
+
+static void applyValueToEquipment(const char *equipmentCode, const char *configType, const char *value)
+{
+    int id = atoi(equipmentCode);
+    extern Node *getInventoryList(void);
+    Node *current = getInventoryList();
+
+    while (current != NULL)
+    {
+        if (current->item.internalCode == id)
+        {
+            if (strcmp(configType, "Modificacao Geral") == 0 || strcmp(configType, "Nome") == 0)
+                strncpy(current->item.name, value, 50);
+            else if (strcmp(configType, "Marca") == 0)
+                strncpy(current->item.brand, value, 50);
+            else if (strcmp(configType, "Modelo") == 0)
+                strncpy(current->item.model, value, 50);
+            else if (strcmp(configType, "IP") == 0)
+                strncpy(current->item.ipAddress, value, 16);
+            else if (strcmp(configType, "MAC") == 0)
+                strncpy(current->item.macAddress, value, 18);
+            else if (strcmp(configType, "Localizacao") == 0)
+                strncpy(current->item.location, value, 100);
+            else if (strcmp(configType, "Status") == 0)
+                current->item.status = stringToEquipmentStatus(value);
+            break;
+        }
+        current = current->next;
+    }
+}
+
+static void executeUndo()
+{
+    if (registerList == NULL)
+        return;
+
+    RegisterNode *undoNode = registerList;
+    registerList = registerList->next;
+
+    applyValueToEquipment(undoNode->registerItem.equipmentCode, undoNode->registerItem.configType, undoNode->registerItem.previousValue);
+
+    undoNode->next = redoList;
+    redoList = undoNode;
+}
+
+static void executeRedo()
+{
+    if (redoList == NULL)
+        return;
+
+    RegisterNode *redoNode = redoList;
+    redoList = redoList->next;
+
+    applyValueToEquipment(redoNode->registerItem.equipmentCode, redoNode->registerItem.configType, redoNode->registerItem.newValue);
+
+    redoNode->next = registerList;
+    registerList = redoNode;
+}
 
 void drawRegisters(float fontSize, float iconScale, int UndoIconId, int RedoIconId, int UploadIconId, int DownloadIconId, int InfoIconId, Rectangle UndoIconRect, Rectangle RedoIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds)
 {
-
     GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize > 22 ? 22 : fontSize);
 
     if (drawIconWcollisions(UndoIconId, iconScale == 1 ? 1 : 2, UndoIconRect))
     {
-        //
+        executeUndo();
     }
     if (drawIconWcollisions(RedoIconId, iconScale == 1 ? 1 : 2, RedoIconRect))
     {
-        //
+        executeRedo();
     }
     if (drawIconWcollisions(UploadIconId, iconScale == 1 ? 1 : 2, UploadIconRect))
     {
@@ -167,7 +251,6 @@ void drawRegisters(float fontSize, float iconScale, int UndoIconId, int RedoIcon
     RegisterNode *current = registerList;
 
     GuiScrollPanel(bounds, "Registers", content, &itemsScroll.scroll, &itemsScroll.view);
-    // panel title 24
     BeginScissorMode(bounds.x, bounds.y + 24, bounds.width, bounds.height - 24);
 
     for (int i = 0; current != NULL; i++)
@@ -206,4 +289,34 @@ void drawRegisters(float fontSize, float iconScale, int UndoIconId, int RedoIcon
         current = current->next;
     }
     EndScissorMode();
+    EndScissorMode();
+
+    if (selectedRegisterNode != NULL)
+    {
+        char infoText[500];
+        snprintf(infoText, sizeof(infoText),
+                 "Equipamento: %s\n"
+                 "Tipo Config: %s\n"
+                 "Valor Antigo: %s\n"
+                 "Novo Valor: %s\n"
+                 "Data/Hora: %s\n"
+                 "Tecnico: %s",
+                 selectedRegisterNode->registerItem.equipmentCode,
+                 selectedRegisterNode->registerItem.configType,
+                 selectedRegisterNode->registerItem.previousValue,
+                 selectedRegisterNode->registerItem.newValue,
+                 selectedRegisterNode->registerItem.dateTime,
+                 selectedRegisterNode->registerItem.technician);
+
+        int result = GuiMessageBox(
+            (Rectangle){GetScreenWidth() / 4, GetScreenHeight() / 4, GetScreenWidth() / 2, GetScreenHeight() / 2},
+            "#140#Detalhes da Configuracao",
+            infoText,
+            "Fechar");
+
+        if (result >= 0)
+        {
+            selectedRegisterNode = NULL;
+        }
+    }
 }

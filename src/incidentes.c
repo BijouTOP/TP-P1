@@ -463,7 +463,6 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
 
     if (showAddIncidenteDialog && !isEditing)
     {
-
         showModal(&newIncident, &newDrop);
     }
 }

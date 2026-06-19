@@ -3,6 +3,7 @@
 #include "inventory.h"
 #include "utils.h"
 #include "incidentes.h"
+#include "registers.h"
 
 #include "raylib.h"
 
@@ -42,7 +43,12 @@ static InventoryItem modifiableItem;
 static bool editModes[9] = {false};
 
 static bool showAddItemDialog = false;
-static Node *inventoryList = NULL;
+Node *inventoryList = NULL;
+
+Node *getInventoryList(void)
+{
+    return inventoryList;
+}
 
 static ScrollVars itemsScroll = {
     .scroll = {0, 0},
@@ -159,7 +165,7 @@ void exePingGeral()
 
         exePingItem(current);
 
-        current = current->next; // Avança para o próximo equipamento
+        current = current->next;
     }
 }
 static void clearInventory()
@@ -258,13 +264,70 @@ static void copy(Node *node, InventoryItem *item)
     node->item.type = item->type;
     node->item.status = item->status;
 }
+static const char *equipmentStatusToString(EquipmentStatus status)
+{
+    switch (status)
+    {
+    case OPERACIONAL:
+        return "Operacional";
+    case MANUTENCAO:
+        return "Em Manutencao";
+    case FALHA:
+        return "Em Falha";
+    case DESATIVADO:
+        return "Desativado";
+    default:
+        return "";
+    }
+}
+
+// Cria e regista (na pilha de undo) uma alteracao de configuracao para um
+// campo especifico, apenas se o valor antigo e o novo forem diferentes.
+static void registerFieldChange(int equipmentCode, const char *configType, const char *previousValue, const char *newValue, const char *dateTime)
+{
+    if (strcmp(previousValue, newValue) == 0)
+        return; // nada mudou neste campo, nao vale a pena registar
+
+    RegisterItem reg;
+
+    snprintf(reg.equipmentCode, sizeof(reg.equipmentCode), "%d", equipmentCode);
+    strncpy(reg.configType, configType, 50);
+    strncpy(reg.previousValue, previousValue, 50);
+    strncpy(reg.newValue, newValue, 50);
+    strncpy(reg.technician, "Tecnico Central", 50);
+    strncpy(reg.dateTime, dateTime, 17);
+
+    registerNewConfig(&reg);
+}
+
 static void saveItem(InventoryItem *item, DropdownVar *drop)
 {
     item->type = (EquipmentType)drop->type;
     item->status = (EquipmentStatus)drop->status;
     if (isEditing && nodeBeingEdited != NULL)
     {
+        time_t t = time(NULL);
+        struct tm tm = *localtime(&t);
+        char dateTime[17];
+        strftime(dateTime, sizeof(dateTime), "%d/%m/%Y %H:%M", &tm);
+
+        int code = nodeBeingEdited->item.internalCode;
+
+        // Um registo por cada campo que tenha realmente mudado, para que o
+        // undo/redo restaure exatamente o que foi alterado.
+        registerFieldChange(code, "Nome", nodeBeingEdited->item.name, item->name, dateTime);
+        registerFieldChange(code, "Marca", nodeBeingEdited->item.brand, item->brand, dateTime);
+        registerFieldChange(code, "Modelo", nodeBeingEdited->item.model, item->model, dateTime);
+        registerFieldChange(code, "IP", nodeBeingEdited->item.ipAddress, item->ipAddress, dateTime);
+        registerFieldChange(code, "MAC", nodeBeingEdited->item.macAddress, item->macAddress, dateTime);
+        registerFieldChange(code, "Localizacao", nodeBeingEdited->item.location, item->location, dateTime);
+        registerFieldChange(code, "Status",
+                            equipmentStatusToString(nodeBeingEdited->item.status),
+                            equipmentStatusToString(item->status),
+                            dateTime);
+
         copy(nodeBeingEdited, item);
+
         isEditing = false;
         nodeBeingEdited = NULL;
     }
