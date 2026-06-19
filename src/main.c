@@ -16,6 +16,16 @@
 
 #include <math.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#if defined(_WIN32)
+#include <direct.h>
+#define CREATE_DIR(path) _mkdir(path)
+#else
+#define CREATE_DIR(path) mkdir(path, 0777)
+#endif
+
 #define DEFAULTWIDTH 1000
 #define DEFAULTHEIGHT 600
 
@@ -35,11 +45,24 @@
 #define MINUS_ICON_ID 221
 #define UPLOAD_ICON_ID 5
 #define DOWNLOAD_ICON_ID 6
+#define INFO_ICON_ID 140
+#define PING_ICON_ID 124
+#define PING_NETWORK_ICON_ID 172
 
 #define FRAME_RATE 60
 
 int MusicState = 0; // 0 - Stopped, 1 - Playing
 int menu = 0;       // 0 - Main Menu, 1 - Inventory, 2 - Connectivity Tests, 3 - Sensor Monitoring, 4 - Technical Incidents, 5 - Configuration Records, 6 - Technical Reports
+
+void garantirPastaData()
+{
+    struct stat st = {0};
+
+    if (stat("data", &st) == -1)
+    {
+        CREATE_DIR("data");
+    }
+}
 
 int main()
 {
@@ -55,7 +78,8 @@ int main()
 
     SetTargetFPS(FRAME_RATE);
 
-    // Inside main()
+    garantirPastaData();
+
     unsigned int *guiIcons = GetGuiIcons();
 
     // Custom icon made with rguiicons, https://raylibtech.itch.io/rguiicons
@@ -92,8 +116,9 @@ int main()
         Rectangle HomeIcon = {paddingAccountingForIcon / 2, GetScreenHeight() - paddingAccountingForIcon, iconSize, iconSize};
 
         Rectangle AddIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4), iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
-        Rectangle DownloadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) / 2 + 15, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
-        Rectangle UploadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, paddingAccountingForIcon + iconSize + (iconScale == 1 ? 4 : -4) + (iconScale == 1 ? 16 : iconSize) + 30, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
+        Rectangle DownloadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, AddIconRect.y + (iconScale == 1 ? 16 : 16 * 2) + 15, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
+        Rectangle UploadIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, DownloadIconRect.y + (iconScale == 1 ? 16 : 16 * 2) + 15, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
+        Rectangle PingNetworkIconRect = {iconSize + paddingAccountingForIcon + GetScreenWidth() - paddingAccountingForIcon * 3 + 5, UploadIconRect.y + (iconScale == 1 ? 16 : 16 * 2) + 15, iconScale == 1 ? 16 : 16 * 2, iconScale == 1 ? 16 : 16 * 2};
         Rectangle bounds = {iconSize + paddingAccountingForIcon, iconSize + paddingAccountingForIcon, GetScreenWidth() - paddingAccountingForIcon * 3, GetScreenHeight() - paddingAccountingForIcon * 3};
 
         // Draw
@@ -101,7 +126,6 @@ int main()
         BeginDrawing();
         ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
-        // Draw icons and check for mouse interaction
         if (drawIconWcollisions(FULLSCREEN_ICON_ID, iconScale, FullscreenIcon))
         {
             ToggleFullscreen();
@@ -128,7 +152,6 @@ int main()
             menu = 0;
         }
 
-        // To reset call same function with default value (10)
         float fontSize = 0.05 * GetScreenHeight();
 
         // Draw main menu
@@ -156,7 +179,7 @@ int main()
             }
             break;
         case 1:
-            drawInventory(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
+            drawInventory(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, PING_ICON_ID, PING_NETWORK_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, PingNetworkIconRect, bounds);
             break;
         case 2:
             break;
@@ -164,7 +187,7 @@ int main()
             drawSensors(fontSize, bounds);
             break;
         case 4:
-            drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
+            drawIncidentes(fontSize, iconScale, ADD_ICON_ID, MINUS_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, INFO_ICON_ID, AddIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
         case 5:
             break;

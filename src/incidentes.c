@@ -264,10 +264,10 @@ static void showModal(Incident *item, DropdownVarIncidentes *drop)
         EndScissorMode();
     }
 }
-void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds)
+void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, int InfoIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds)
 {
     GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize > 22 ? 22 : fontSize);
-
+    // usar funçao utils?
     if (showAddIncidenteDialog && !isEditing)
     {
         GuiDrawIcon(MinusIconId, AddIconRect.x, AddIconRect.y, iconScale == 1 ? 1 : 2, BLACK);
@@ -285,11 +285,11 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
     }
     if (drawIconWcollisions(UploadIconId, iconScale == 1 ? 1 : 2, UploadIconRect))
     {
-        loadIncidentsFromFile("incidentes.dat");
+        loadIncidentsFromFile("data/incidentes.dat");
     }
     if (drawIconWcollisions(DownloadIconId, iconScale == 1 ? 1 : 2, DownloadIconRect))
     {
-        saveIncidentsToFile("incidentes.dat");
+        saveIncidentsToFile("data/incidentes.dat");
     }
 
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
@@ -347,7 +347,7 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
 
         GuiLabel(itemBounds, displayText);
 
-        if (GuiButton(showinfo, "#140#"))
+        if (GuiButton(showinfo, TextFormat("#%d#", InfoIconId)))
             showInfoForId = (showInfoForId == current->incident.id) ? -1 : current->incident.id;
         if (current->incident.status == INCIDENTE_EM_CURSO || current->incident.status == INCIDENTE_CONCLUIDO)
         {

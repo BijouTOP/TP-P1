@@ -17,8 +17,6 @@
 
 static SensorNode *selectedSensorNode = NULL;
 
-// static bool showBar = false;
-
 static SensorNode *sensorsList = NULL;
 
 static ScrollVars sensorsScroll = {

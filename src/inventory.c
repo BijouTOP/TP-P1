@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 int nextInternalCode = 1;
 
@@ -62,6 +63,71 @@ static bool filterTypeEdit = false;
 
 static int filterStatus = 0;
 static bool filterStatusEdit = false;
+
+static bool analisarResultadoPing(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+        return false;
+
+    char linha[256];
+    bool respondeu = false;
+
+    while (fgets(linha, sizeof(linha), file))
+    {
+        if (strstr(linha, "ttl=") != NULL || strstr(linha, "TTL=") != NULL)
+        {
+            respondeu = true;
+            break;
+        }
+    }
+
+    fclose(file);
+    return respondeu;
+}
+
+static void executarPingItem(Node *node)
+{
+    if (node == NULL || strlen(node->item.ipAddress) == 0)
+        return;
+
+    char comando[256];
+    const char *tempFile = "data/resultado_ping.txt";
+
+#if defined(_WIN32)
+    snprintf(comando, sizeof(comando), "ping -n 4 %s > %s", node->item.ipAddress, tempFile);
+#else
+    snprintf(comando, sizeof(comando), "ping -c 4 %s > %s", node->item.ipAddress, tempFile);
+#endif
+
+    system(comando);
+
+    bool respondeu = analisarResultadoPing(tempFile);
+
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+
+    strftime(node->item.lastMaintenanceDate, sizeof(node->item.lastMaintenanceDate), "%d/%m/%Y", &tm);
+
+    if (!respondeu)
+    {
+        node->item.status = 2;
+
+        // Funcao incidentes por criar
+    }
+
+    FILE *logFile = fopen("data/log_monitorizacao.txt", "a");
+    if (logFile != NULL)
+    {
+        fprintf(logFile, "[%02d/%02d/%04d %02d:%02d:%02d] ID: %d | IP: %s | Estado: %s\n",
+                tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900,
+                tm.tm_hour, tm.tm_min, tm.tm_sec,
+                node->item.internalCode,
+                node->item.ipAddress,
+                respondeu ? "SUCESSO" : "FALHA (Estado alterado para Em Falha)");
+        fclose(logFile);
+    }
+}
 
 static void clearInventory()
 {
@@ -288,7 +354,7 @@ static void showModal(InventoryItem *item, DropdownVar *drop)
         EndScissorMode();
     }
 }
-void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds)
+void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, int PingIconId, int PingNetworkIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle PingNetworkRect, Rectangle bounds)
 {
 
     GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize > 22 ? 22 : fontSize);
@@ -310,11 +376,14 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
     }
     if (drawIconWcollisions(UploadIconId, iconScale == 1 ? 1 : 2, UploadIconRect))
     {
-        loadInventoryFromFile("equipamentos.dat");
+        loadInventoryFromFile("data/equipamentos.dat");
     }
     if (drawIconWcollisions(DownloadIconId, iconScale == 1 ? 1 : 2, DownloadIconRect))
     {
-        saveInventoryToFile("equipamentos.dat");
+        saveInventoryToFile("data/equipamentos.dat");
+    }
+    if (drawIconWcollisions(PingNetworkIconId, iconScale == 1 ? 1 : 2, PingNetworkRect))
+    {
     }
 
     float fontSizeForButtons = fontSize > 22 ? 22 + 5 : fontSize + 5;
@@ -356,7 +425,8 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
         }
 
         GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-        Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + itemsScroll.scroll.y, bounds.width - 70 - modificarLenght - deletarLenght, fontSizeForButtons};
+        Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + itemsScroll.scroll.y, bounds.width - 70 - 26 - modificarLenght - deletarLenght, fontSizeForButtons};
+        Rectangle pingButtonBounds = {bounds.x + bounds.width - 76 - modificarLenght - deletarLenght, itemBounds.y, 16, fontSizeForButtons};
         Rectangle modifyButtonBounds = {bounds.x + bounds.width - 50 - modificarLenght - deletarLenght, itemBounds.y, modificarLenght + 10, fontSizeForButtons};
         Rectangle deleteButtonBounds = {bounds.x + bounds.width - 30 - deletarLenght, itemBounds.y, deletarLenght + 10, fontSizeForButtons};
 
@@ -368,6 +438,10 @@ void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIcon
                  current->item.name);
 
         GuiLabel(itemBounds, displayText);
+        if (GuiButton(pingButtonBounds, TextFormat("#%d#", PingIconId)))
+        {
+            executarPingItem(current);
+        }
 
         if (GuiButton(modifyButtonBounds, "Modificar") && !showAddItemDialog && !filterStatusEdit && !filterTypeEdit)
         {

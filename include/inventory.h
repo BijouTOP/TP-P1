@@ -52,4 +52,4 @@ typedef struct DropdownVar
     int status;
 } DropdownVar;
 
-void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds);
+void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, int PingiconId, int PingNetworkIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle PingNetworkRect, Rectangle bounds);

@@ -7,5 +7,4 @@ cmake_install.cmake
 CPackConfig.cmake
 CPackSourceConfig.cmake
 Makefile
-equipamentos.dat
-incidentes.dat
+/data
