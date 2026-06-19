@@ -47,7 +47,6 @@ cmake --build .
 
 ### Requisitos
 
-- Visual Studio 2022 (Desktop Development with C++)
 - CMake
 - Git
 
