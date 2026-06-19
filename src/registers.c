@@ -56,7 +56,7 @@ void clearRegisters()
     clearRedoList();
 }
 
-static void saveRegistersToFile(const char *filename)
+void saveRegistersToFile(const char *filename)
 {
     FILE *file = fopen(filename, "wb");
     if (file == NULL)
@@ -84,7 +84,7 @@ static void saveRegistersToFile(const char *filename)
     fclose(file);
 }
 
-static void loadRegistersFromFile(const char *filename)
+void loadRegistersFromFile(const char *filename)
 {
     FILE *file = fopen(filename, "rb");
     if (file == NULL)

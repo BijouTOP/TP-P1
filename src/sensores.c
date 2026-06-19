@@ -41,6 +41,56 @@ void freeSensorsList(void);
 sensorStatus stringToStatus(const char *statusStr);
 void processarTextoSensores(const char *textData, const char *origemLog);
 
+void guardarSensoresBinario(const char *filename)
+{
+    if (sensorsList == NULL)
+        return;
+
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL)
+        return;
+
+    SensorNode *current = sensorsList;
+    while (current != NULL)
+    {
+        fwrite(&current->sensor, sizeof(Sensor), 1, file);
+        current = current->next;
+    }
+
+    fclose(file);
+}
+
+void carregarSensoresBinario(const char *filename)
+{
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL)
+        return;
+
+    freeSensorsList();
+
+    Sensor tempSensor;
+    SensorNode *tail = NULL;
+
+    while (fread(&tempSensor, sizeof(Sensor), 1, file) == 1)
+    {
+        SensorNode *newNode = (SensorNode *)malloc(sizeof(SensorNode));
+        if (newNode == NULL)
+            break;
+
+        newNode->sensor = tempSensor;
+        newNode->next = NULL;
+
+        if (sensorsList == NULL)
+            sensorsList = newNode;
+        else
+            tail->next = newNode;
+
+        tail = newNode;
+    }
+
+    fclose(file);
+}
+
 void freeSensorsList(void)
 {
     SensorNode *current = sensorsList;

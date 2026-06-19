@@ -32,3 +32,5 @@ bool importarSensoresFicheiro(const char *filename);
 bool importarSensoresAPI(void);
 void guardarSensoresFicheiro(const char *filename);
 void freeSensorsList(void);
+void guardarSensoresBinario(const char *filename);
+void carregarSensoresBinario(const char *filename);

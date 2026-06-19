@@ -35,8 +35,8 @@ const InventoryItem emptyState = {
     .macAddress = "",
     .location = "",
     .status = 0,
-    .lastMaintenanceDate = ""};
-
+    .lastMaintenanceDate = "",
+    .incidents = false};
 static InventoryItem newItem;
 static InventoryItem modifiableItem;
 
@@ -179,7 +179,7 @@ static void clearInventory()
     }
     inventoryList = NULL;
 }
-static void saveInventoryToFile(const char *filename)
+void saveInventoryToFile(const char *filename)
 {
     FILE *file = fopen(filename, "wb");
     if (file == NULL)
@@ -207,7 +207,7 @@ static void saveInventoryToFile(const char *filename)
     fclose(file);
 }
 
-static void loadInventoryFromFile(const char *filename)
+void loadInventoryFromFile(const char *filename)
 {
     FILE *file = fopen(filename, "rb");
     if (file == NULL)
@@ -281,12 +281,10 @@ static const char *equipmentStatusToString(EquipmentStatus status)
     }
 }
 
-// Cria e regista (na pilha de undo) uma alteracao de configuracao para um
-// campo especifico, apenas se o valor antigo e o novo forem diferentes.
 static void registerFieldChange(int equipmentCode, const char *configType, const char *previousValue, const char *newValue, const char *dateTime)
 {
     if (strcmp(previousValue, newValue) == 0)
-        return; // nada mudou neste campo, nao vale a pena registar
+        return;
 
     RegisterItem reg;
 
@@ -300,7 +298,7 @@ static void registerFieldChange(int equipmentCode, const char *configType, const
     registerNewConfig(&reg);
 }
 
-static void saveItem(InventoryItem *item, DropdownVar *drop)
+void saveItem(InventoryItem *item, DropdownVar *drop)
 {
     item->type = (EquipmentType)drop->type;
     item->status = (EquipmentStatus)drop->status;
@@ -313,8 +311,6 @@ static void saveItem(InventoryItem *item, DropdownVar *drop)
 
         int code = nodeBeingEdited->item.internalCode;
 
-        // Um registo por cada campo que tenha realmente mudado, para que o
-        // undo/redo restaure exatamente o que foi alterado.
         registerFieldChange(code, "Nome", nodeBeingEdited->item.name, item->name, dateTime);
         registerFieldChange(code, "Marca", nodeBeingEdited->item.brand, item->brand, dateTime);
         registerFieldChange(code, "Modelo", nodeBeingEdited->item.model, item->model, dateTime);
@@ -341,6 +337,7 @@ static void saveItem(InventoryItem *item, DropdownVar *drop)
 
         newNode->next = inventoryList;
         inventoryList = newNode;
+        newNode->item.incidents = false;
 
         showAddItemDialog = false;
 

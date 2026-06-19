@@ -56,3 +56,5 @@ typedef struct DropdownVar
 void drawInventory(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, int PingiconId, int PingNetworkIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle PingNetworkRect, Rectangle bounds);
 void linkIncidenteEquipamento(int equipmentId);
 Node *getInventoryList(void);
+void loadInventoryFromFile(const char *filename);
+void saveInventoryToFile(const char *filename);

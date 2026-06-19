@@ -11,12 +11,6 @@
 
 #pragma GCC diagnostic pop
 
-int closeWindow()
-{
-    CloseAudioDevice();
-    CloseWindow();
-    return 0;
-}
 void drawTextBoxWithPlaceholder(Rectangle bounds, char *text, int textSize, bool *editMode, const char *placeholder)
 {
     if (strlen(text) == 0 && !(*editMode))

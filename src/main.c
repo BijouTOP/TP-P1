@@ -66,6 +66,18 @@ void garantirPastaData()
         CREATE_DIR("data");
     }
 }
+int closeWindow()
+{
+    saveInventoryToFile("data/equipamentos.dat");
+    saveIncidentsToFile("data/incidentes.dat");
+    saveRegistersToFile("data/configuracoes.dat");
+    guardarSensoresBinario("data/leituras_sensores.dat");
+    guardarSensoresFicheiro("data/sensores_rack.txt");
+    freeSensorsList();
+    CloseAudioDevice();
+    CloseWindow();
+    return 0;
+}
 
 int main()
 {
@@ -89,6 +101,15 @@ int main()
     unsigned int AudioMutedIcon[8] = {0x00000000, 0x00a000c0, 0x00880090, 0x00820086, 0x00860082, 0x00900088, 0x00c000a0, 0x00000000};
     unsigned int AddIcon[8] = {0x01800000, 0x01800180, 0x01800180, 0x7ffe0180, 0x01807ffe, 0x01800180, 0x01800180, 0x00000180};
     unsigned int MinusIcon[8] = {0x00000000, 0x00000000, 0x00000000, 0x7ffe0000, 0x00007ffe, 0x00000000, 0x00000000, 0x00000000};
+
+    // --- NOVO: Carregamento automático dos dados existentes ---
+    TraceLog(LOG_INFO, "A carregar dados locais dos ficheiros binarios...");
+    loadInventoryFromFile("data/equipamentos.dat");
+    loadIncidentsFromFile("data/incidentes.dat");
+    loadRegistersFromFile("data/configuracoes.dat");
+
+    // TraceLog(LOG_INFO, "A carregar dados dos sensores via binario...");
+    // carregarSensoresBinario("data/leituras_sensores.dat");
 
     TraceLog(LOG_INFO, "A tentar carregar dados dos sensores via API...");
     if (!importarSensoresAPI())
@@ -144,10 +165,6 @@ int main()
         }
         if (drawIconWcollisions(EXIT_ICON_ID, iconScale, ExitIcon))
         {
-            TraceLog(LOG_INFO, "A guardar dados antes de fechar...");
-            guardarSensoresFicheiro("data/sensores_rack.txt");
-
-            freeSensorsList();
             return closeWindow();
         }
         if (drawIconWcollisions(MusicState == 0 ? AUDIO_MUTED_ICON_ID : AUDIO_UNMUTED_ICON_ID, iconScale, MusicIcon))
@@ -211,11 +228,6 @@ int main()
         }
         EndDrawing();
     }
-
-    TraceLog(LOG_INFO, "A guardar dados antes de fechar...");
-    guardarSensoresFicheiro("data/sensores_rack.txt");
-
-    freeSensorsList();
 
     return closeWindow();
 }
