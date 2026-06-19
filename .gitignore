@@ -1,4 +1,5 @@
 TP-P1
+TP-P1.exe
 cmake_install.cmake
 /_deps
 /CMakeFiles
@@ -8,3 +9,6 @@ CPackConfig.cmake
 CPackSourceConfig.cmake
 Makefile
 /data
+/build
+/Debug
+/Release

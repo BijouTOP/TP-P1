@@ -6,14 +6,7 @@
 #include "registers.h"
 
 #include "raylib.h"
-
-// Disable unused parameter warnings specifically for raygui
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "raygui.h"
-
-#pragma GCC diagnostic pop
 
 #include <math.h>
 
@@ -34,6 +27,7 @@
 #define MINIMUMHEIGHT 480
 
 #define MUSICPATH "media/music.ogg"
+#define ICONAPPPATH "media/icon.png"
 
 #define MUSIC_VOLUME 0.2f
 
@@ -55,7 +49,7 @@
 #define FRAME_RATE 60
 
 int MusicState = 0; // 0 - Stopped, 1 - Playing
-int menu = 0;       // 0 - Main Menu, 1 - Inventory, 2 - Connectivity Tests, 3 - Sensor Monitoring, 4 - Technical Incidents, 5 - Configuration Records, 6 - Technical Reports
+int menu = 0;       
 
 void garantirPastaData()
 {
@@ -92,6 +86,11 @@ int main()
     PauseMusicStream(music);
 
     SetTargetFPS(FRAME_RATE);
+    
+    Image icon = LoadImage(ICONAPPPATH);
+    ImageFormat(&icon, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    SetWindowIcon(icon);
+    UnloadImage(icon);
 
     garantirPastaData();
 
@@ -102,7 +101,6 @@ int main()
     unsigned int AddIcon[8] = {0x01800000, 0x01800180, 0x01800180, 0x7ffe0180, 0x01807ffe, 0x01800180, 0x01800180, 0x00000180};
     unsigned int MinusIcon[8] = {0x00000000, 0x00000000, 0x00000000, 0x7ffe0000, 0x00007ffe, 0x00000000, 0x00000000, 0x00000000};
 
-    // --- NOVO: Carregamento automático dos dados existentes ---
     TraceLog(LOG_INFO, "A carregar dados locais dos ficheiros binarios...");
     loadInventoryFromFile("data/equipamentos.dat");
     loadIncidentsFromFile("data/incidentes.dat");

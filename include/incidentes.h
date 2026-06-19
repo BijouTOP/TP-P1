@@ -1,11 +1,5 @@
-// Disable unused parameter warnings specifically for raygui
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "raylib.h"
 #include "raygui.h"
-
-#pragma GCC diagnostic pop
 
 typedef enum
 {

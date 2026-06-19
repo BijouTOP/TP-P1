@@ -5,14 +5,7 @@
 #include "inventory.h"
 
 #include "raylib.h"
-
-// Disable unused parameter warnings specifically for raygui
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "raygui.h"
-
-#pragma GCC diagnostic pop
 
 #include <string.h>
 #include <stdio.h>
@@ -415,10 +408,8 @@ void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIco
             struct tm tm = *localtime(&t);
 
             strftime(current->incident.concludedAt, sizeof(current->incident.concludedAt), "%d-%m-%Y %H:%M", &tm);
-            printf("\n%d", current->incident.equipmentId);
             if (current->incident.equipmentId != -1)
             {
-                printf("\nola");
                 linkIncidenteEquipamento(current->incident.equipmentId);
             }
         }

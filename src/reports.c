@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <time.h>
 
-// NOTA: Certifique-se de que tem acesso às listas de inventário e incidentes.
-// Se não houver getIncidentList(), precisará de a criar em incidentes.c semelhante ao getInventoryList().
 extern IncidentNode *getIncidentList(void);
 
 void gerarRelatorioEstadoRede(void)
@@ -53,9 +51,7 @@ void gerarRelatorioEstadoRede(void)
     if (pendentes == 0)
         fprintf(file, "Nenhum incidente pendente.\n");
 
-    // 3. Leituras Anómalas (Exemplo genérico - adapte conforme a sua lógica de sensores)
     fprintf(file, "\n--- LEITURAS ANÓMALAS DE SENSORES ---\n");
-    // Aqui percorreria os sensores ou logs de leituras fora dos limites normais.
     fprintf(file, "Sem leituras anómalas registadas.\n");
 
     fclose(file);
@@ -96,8 +92,6 @@ void gerarRelatorioMensalIncidentes(void)
     fprintf(file, "Prioridade Baixa: %d\n", totalBaixa);
     fprintf(file, "Prioridade Média: %d\n", totalMedia);
     fprintf(file, "Prioridade Alta:  %d\n\n", totalAlta);
-
-    // N fiz tipo pois é uma str
 
     fclose(file);
 }

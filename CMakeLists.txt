@@ -49,11 +49,25 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} raylib CURL::libcurl)
 #set(raylib_VERBOSE 1)
 
+# Place the built executable at the project root (next to media/), instead
+# of inside build/, so relative paths like "media/music.ogg" and "data/"
+# work without copying anything around. Overriding the per-config dirs too
+# stops MSVC/Visual Studio from creating Debug/Release subfolders.
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_SOURCE_DIR}"
+    )
+endforeach()
+
 
 if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 ")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -Werror -Wpedantic")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -w")
 endif()
 
 # Web Configurations

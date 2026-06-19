@@ -4,14 +4,7 @@
 #include "inventory.h"
 
 #include "raylib.h"
-
-// Disable unused parameter warnings specifically for raygui
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "raygui.h"
-
-#pragma GCC diagnostic pop
 
 #include <string.h>
 #include <stdio.h>

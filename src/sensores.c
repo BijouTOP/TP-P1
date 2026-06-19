@@ -3,19 +3,19 @@
 #include "incidentes.h"
 
 #include "raylib.h"
-
-// Disable unused parameter warnings specifically for raygui
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "raygui.h"
-
-#pragma GCC diagnostic pop
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+#if defined(_WIN32)
+    #define WIN32_LEAN_AND_MEAN
+    #define NOGDI
+    #define NOUSER
+#endif
+
 #include <curl/curl.h>
 
 typedef struct
@@ -218,11 +218,6 @@ void processarTextoSensores(const char *textData, const char *origemLog)
 bool importarSensoresFicheiro(const char *filename)
 {
     FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        TraceLog(LOG_WARNING, "Nao foi possivel abrir o ficheiro %s", filename);
-        return false;
-    }
 
     fseek(file, 0, SEEK_END);
     long length = ftell(file);
@@ -249,17 +244,14 @@ bool importarSensoresAPI(void)
 
     if (chunk.payload == NULL)
     {
-        TraceLog(LOG_ERROR, "[CURL DEBUG] Falha ao alocar memoria inicial para o buffer.");
         return false;
     }
 
-    TraceLog(LOG_INFO, "[CURL DEBUG] A inicializar cURL...");
     curl_global_init(CURL_GLOBAL_ALL);
     curl_handle = curl_easy_init();
 
     if (!curl_handle)
     {
-        TraceLog(LOG_ERROR, "[CURL DEBUG] Nao foi possivel inicializar o easy handle.");
         free(chunk.payload);
         return false;
     }
@@ -269,28 +261,21 @@ bool importarSensoresAPI(void)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
-    TraceLog(LOG_INFO, "[CURL DEBUG] A disparar o pedido HTTP para o endpoint...");
     res = curl_easy_perform(curl_handle);
 
     bool sucesso = false;
     if (res == CURLE_OK)
     {
-        TraceLog(LOG_INFO, "[CURL DEBUG] Pedido efetuado com sucesso! Bytes recebidos: %zu", chunk.size);
 
         if (chunk.size > 0)
         {
             char debugSnippet[151];
             strncpy(debugSnippet, chunk.payload, 150);
             debugSnippet[150] = '\0';
-            TraceLog(LOG_INFO, "[CURL DEBUG] Inicio do payload recebido:\n%s\n[...]", debugSnippet);
         }
 
         processarTextoSensores(chunk.payload, "API ENDPOINT");
         sucesso = true;
-    }
-    else
-    {
-        TraceLog(LOG_ERROR, "[CURL DEBUG] O cURL falhou! Código do Erro: %d - %s", res, curl_easy_strerror(res));
     }
 
     curl_easy_cleanup(curl_handle);
@@ -305,11 +290,6 @@ void guardarSensoresFicheiro(const char *filename)
         return;
 
     FILE *file = fopen(filename, "w");
-    if (file == NULL)
-    {
-        TraceLog(LOG_WARNING, "Nao foi possivel abrir o ficheiro %s para escrita", filename);
-        return;
-    }
 
     const char *statusStr[] = {"FALHA_REDE", "CRITICO", "NORMAL", "AVISO"};
 
@@ -327,7 +307,6 @@ void guardarSensoresFicheiro(const char *filename)
     }
 
     fclose(file);
-    TraceLog(LOG_INFO, "Dados dos sensores guardados com sucesso em %s", filename);
 }
 void drawSensors(float fontSize, int InfoIconId, Rectangle bounds)
 {
