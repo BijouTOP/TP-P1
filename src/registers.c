@@ -272,7 +272,7 @@ void drawRegisters(float fontSize, float iconScale, int UndoIconId, int RedoIcon
         }
         GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
         Rectangle itemBounds = {bounds.x + 30, bounds.y + 40 + (i * 40) + itemsScroll.scroll.y, bounds.width - 26, fontSizeForButtons};
-        Rectangle showinfo = {bounds.x + bounds.width - 16, itemBounds.y, 16, fontSizeForButtons};
+        Rectangle showinfo = {bounds.x + bounds.width - 26, itemBounds.y, 16, fontSizeForButtons};
 
         char displayText[150];
 
