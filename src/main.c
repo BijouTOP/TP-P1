@@ -195,8 +195,6 @@ int main()
         case 4:
             drawRegisters(fontSize, iconScale, UNDO_ICON_ID, REDO_ICON_ID, UPLOAD_ICON_ID, DOWNLOAD_ICON_ID, INFO_ICON_ID, UndoIconRect, RedoIconRect, DownloadIconRect, UploadIconRect, bounds);
             break;
-        case 5:
-            break;
         default:
             break;
         }
