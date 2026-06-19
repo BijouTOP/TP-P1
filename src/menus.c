@@ -1,4 +1,5 @@
 #include "menus.h"
+#include "reports.h"
 
 #include "raylib.h"
 
@@ -18,8 +19,14 @@ int drawMainMenu(float fontSize)
     GuiSetStyle(DEFAULT, TEXT_SIZE, fontSize);
     GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
-    const char *menuLabels[5] = {"Inventário de Equipamentos da Rede", "Monitorização de Sensores", "Incidentes Técnicos", "Registo de Configurações", "Relatórios Técnicos"};
-    for (int i = 0; i < 5; i++)
+    const char *menuLabels[6] = {
+        "Inventário de Equipamentos da Rede",
+        "Monitorização de Sensores",
+        "Incidentes Técnicos",
+        "Registo de Configurações",
+        "Relatório Estado Da Rede",
+        "Relatório Mensal"};
+    for (int i = 0; i < 6; i++)
     {
         // GuiLabel((Rectangle){containerBounds.x, containerBounds.y + (i * spacing), containerBounds.width, 24}, menuLabels[i]);
         if (GuiLabelButton((Rectangle){GetScreenWidth() / 2 - ((MeasureText(menuLabels[i], fontSize)) / 2.0f), containerPadding * GetScreenHeight() + (i * spacing), MeasureText(menuLabels[i], (int)fontSize), fontSize}, menuLabels[i]))
@@ -39,7 +46,11 @@ int drawMainMenu(float fontSize)
                 return 4;
                 break;
             case 4:
-                return 5;
+                gerarRelatorioEstadoRede();
+
+                break;
+            case 5:
+                gerarRelatorioMensalIncidentes();
                 break;
             default:
                 return 0;

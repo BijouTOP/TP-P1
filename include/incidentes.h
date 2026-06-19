@@ -52,3 +52,4 @@ typedef struct DropdownVarIncidentes
 
 void drawIncidentes(float fontSize, float iconScale, int AddIconId, int MinusIconId, int UploadIconId, int DownloadIconId, int InfoIconId, Rectangle AddIconRect, Rectangle DownloadIconRect, Rectangle UploadIconRect, Rectangle bounds);
 void autoIncidentinventory(char *equipamento, int equipmentId);
+IncidentNode *getIncidentList(void);

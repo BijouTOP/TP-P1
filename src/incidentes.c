@@ -45,6 +45,11 @@ static bool showAddIncidenteDialog = false;
 
 static IncidentNode *incidentList = NULL;
 
+IncidentNode *getIncidentList(void)
+{
+    return incidentList;
+}
+
 static ScrollVars incidentsScroll = {
     .scroll = {0, 0},
     .view = {0}};

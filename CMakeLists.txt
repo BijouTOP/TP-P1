@@ -37,6 +37,7 @@ add_executable(${PROJECT_NAME}
     src/registers.c
     src/utils.c
     src/gui.c
+    src/reports.c
 
 )
 
