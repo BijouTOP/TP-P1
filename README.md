@@ -102,6 +102,19 @@ cd ..
    cd ..
    ./TP-P1.exe
    ```
+---
+
+### Windows — w64devkit (não testado)
+
+1. Descarregar e configurar o [w64devkit](https://github.com/skeeto/w64devkit) (ambiente de desenvolvimento portátil para Windows).
+2. Certifica-te de que tens o `cmake` e o `git` acessíveis no teu ambiente.
+3. Como o `w64devkit` é minimalista e não traz o `libcurl` por padrão, terás de compilar ou fornecer os caminhos de uma instalação existente do Curl (por exemplo, aproveitando as bibliotecas do MSYS2 se instalado, ou descarregando os binários do `libcurl` para MinGW).
+4. Abre a consola do `w64devkit` (`w64devkit.exe`), navega até à pasta do projeto e compila passando os caminhos do `libcurl` diretamente ao CMake:
+   ```bash
+   mkdir build
+   cd build
+   cmake -G Ninja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCURL_INCLUDE_DIR="C:/caminho/para/curl/include" -DCURL_LIBRARY="C:/caminho/para/curl/lib/libcurl.a" ..
+   cmake --build .
 
 ---
 
